@@ -5,6 +5,8 @@ struct SettingsScreen: View {
     @Environment(\.dismiss) private var dismiss
     @FocusState private var notesFocused: Bool
     @State private var refreshed = false
+    @State private var apiKey: String = UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? ""
+    @State private var apiKeyVisible = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -119,6 +121,57 @@ struct SettingsScreen: View {
                     }
                     .animation(.easeInOut(duration: 0.2), value: refreshed)
                     .disabled(refreshed)
+
+                    rule(40)
+
+                    // MARK: API Key
+                    sectionLabel("AI Recommendations")
+                    Spacer().frame(height: 6)
+                    BodyText(text: "Your Anthropic API key powers daily nourishment and recipe suggestions. It's stored only on this device.", size: 13)
+                    Spacer().frame(height: 16)
+
+                    HStack(spacing: 0) {
+                        Group {
+                            if apiKeyVisible {
+                                TextField("sk-ant-...", text: $apiKey)
+                            } else {
+                                SecureField("sk-ant-...", text: $apiKey)
+                            }
+                        }
+                        .font(LFont.body(14))
+                        .foregroundColor(.lInk)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .onChange(of: apiKey) { _, val in
+                            UserDefaults.standard.set(val.trimmingCharacters(in: .whitespaces), forKey: "anthropicAPIKey")
+                        }
+
+                        Button {
+                            apiKeyVisible.toggle()
+                        } label: {
+                            Image(systemName: apiKeyVisible ? "eye.slash" : "eye")
+                                .font(.system(size: 14))
+                                .foregroundColor(.lInk3)
+                                .padding(.leading, 10)
+                        }
+                    }
+                    .padding(16)
+                    .background(Color.lPaper)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(apiKey.isEmpty ? Color.lRed.opacity(0.4) : Color.lRule, lineWidth: 1))
+
+                    if apiKey.isEmpty {
+                        Text("Add your key to enable AI features.")
+                            .font(LFont.body(12))
+                            .foregroundColor(.lRed.opacity(0.7))
+                            .padding(.top, 6)
+                    } else {
+                        Text("Key saved ✓")
+                            .font(LFont.body(12))
+                            .foregroundColor(.lSageDeep)
+                            .padding(.top, 6)
+                    }
 
                     rule(40)
 
