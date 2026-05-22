@@ -20,10 +20,12 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>CFBundleDisplayName</key>
+	<string>Ona</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Lune uses HealthKit to read your health data and provide personalized cycle-based food recommendations.</string>
+	<string>Ona uses HealthKit to read your health data and provide personalized cycle-based food recommendations.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Lune uses HealthKit to save health data related to your cycle tracking.</string>
+	<string>Ona uses HealthKit to save health data related to your cycle tracking.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

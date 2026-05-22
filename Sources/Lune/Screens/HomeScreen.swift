@@ -31,17 +31,11 @@ struct HomeScreen: View {
                 divider(32)
                 moodCheckIn
                 divider(32)
-                hydrationSection
-                divider(32)
                 nourishmentSection
                 divider(32)
                 CraveSearchSection()
                 divider(32)
-                cycleHistoryCard
-                divider(32)
                 symptomLogSection
-                divider(32)
-                partnerShare
                 divider(24)
                 footer
                 Spacer().frame(height: 60)
@@ -229,70 +223,6 @@ struct HomeScreen: View {
         }
     }
 
-    // MARK: - Hydration
-    var hydrationSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "Hydration", title: "The tide")
-
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .bottom) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(alignment: .lastTextBaseline, spacing: 0) {
-                            Text("\(appState.dailyLog.hydration)")
-                                .font(LFont.display(40))
-                                .foregroundColor(.lInk)
-                            Text(" / 8")
-                                .font(LFont.display(20))
-                                .foregroundColor(.lInk3)
-                        }
-                        BodyText(text: hydrationCopy, size: 12.5)
-                    }
-
-                    Spacer()
-
-                    Button {
-                        appState.dailyLog.hydration = min(8, appState.dailyLog.hydration + 1)
-                    } label: {
-                        Text("+")
-                            .font(.system(size: 22, weight: .light))
-                            .foregroundColor(.lCream)
-                            .frame(width: 38, height: 38)
-                            .background(Color.lTerracotta)
-                            .clipShape(Circle())
-                            .shadow(color: Color.lTerracotta.opacity(0.3), radius: 6, x: 0, y: 4)
-                    }
-                }
-
-                Spacer().frame(height: 16)
-
-                TideWaveView(progress: Double(appState.dailyLog.hydration) / 8.0)
-                    .frame(height: 36)
-
-                Spacer().frame(height: 8)
-
-                HStack {
-                    Text("MORNING").font(LFont.mono(9.5)).tracking(1.2).foregroundColor(.lInk3)
-                    Spacer()
-                    Text("NOON").font(LFont.mono(9.5)).tracking(1.2).foregroundColor(.lInk3)
-                    Spacer()
-                    Text("EVENING").font(LFont.mono(9.5)).tracking(1.2).foregroundColor(.lInk3)
-                }
-            }
-            .padding(20)
-            .cardStyle()
-        }
-        .padding(.horizontal, 28)
-    }
-
-    private var hydrationCopy: String {
-        switch phase.name {
-        case "Menstrual":  return "Warmth and hydration support the reset — sip steadily."
-        case "Follicular": return "Energy is building. Keep fluids flowing to match your pace."
-        case "Ovulatory":  return "Peak warmth calls for steady, cooling hydration."
-        default:           return "Luteal phase needs a little more — water retention runs higher."
-        }
-    }
-
     // MARK: - Nourishment
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -303,62 +233,6 @@ struct HomeScreen: View {
                 ForEach(recipes) { recipe in
                     RecipeCard(recipe: recipe)
                 }
-            }
-        }
-        .padding(.horizontal, 28)
-    }
-
-    // MARK: - Cycle history
-    var cycleHistoryCard: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "From last cycle")
-
-            ZStack(alignment: .topTrailing) {
-                // Background dark card
-                Color.lInk
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-
-                // Decorative moon
-                MoonView(phase: 0.65, size: 160, litColor: .lCream, darkColor: .lInk,
-                         showCraters: false, showGlow: false)
-                    .opacity(0.15)
-                    .offset(x: 40, y: -30)
-                    .allowsHitTesting(false)
-
-                VStack(alignment: .leading, spacing: 0) {
-                    Eyebrow("Pattern noticed", color: Color.lCream.opacity(0.55))
-
-                    Spacer().frame(height: 10)
-
-                    (Text("Last \(phase.name.lowercased()) phase you saved ")
-                     + Text("three anti-bloat meals.").italic())
-                        .font(LFont.display(22))
-                        .foregroundColor(.lCream)
-                        .frame(maxWidth: 270, alignment: .leading)
-                        .lineSpacing(4)
-
-                    Spacer().frame(height: 14)
-
-                    BodyText(text: "They worked then. Bringing them back to the top of today's list.",
-                             size: 13, color: Color.lCream.opacity(0.7))
-
-                    Spacer().frame(height: 16)
-
-                    Button {} label: {
-                        Text("See them again →")
-                            .font(LFont.body(13))
-                            .foregroundColor(.lCream)
-                            .padding(.bottom, 2)
-                            .overlay(
-                                Rectangle()
-                                    .fill(Color.lCream.opacity(0.4))
-                                    .frame(height: 1),
-                                alignment: .bottom
-                            )
-                    }
-                }
-                .padding(.horizontal, 22)
-                .padding(.vertical, 22)
             }
         }
         .padding(.horizontal, 28)
@@ -413,46 +287,9 @@ struct HomeScreen: View {
         .padding(.horizontal, 28)
     }
 
-    // MARK: - Partner share
-    var partnerShare: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(Color.lCream2)
-                    .frame(width: 44, height: 44)
-                Image(systemName: "arrow.up")
-                    .font(.system(size: 16, weight: .regular))
-                    .foregroundColor(.lInk)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("For your partner")
-                    .font(LFont.display(18, italic: true))
-                    .foregroundColor(.lInk)
-                BodyText(text: "A gentle \"what to cook for her this week\" summary.", size: 12.5)
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .regular))
-                .foregroundColor(.lInk2)
-        }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 20)
-        .background(Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
-                .foregroundColor(Color.lRule)
-        )
-        .padding(.horizontal, 28)
-    }
-
     // MARK: - Footer
     var footer: some View {
-        Eyebrow("Lune · with the moon", color: .lInk3)
+        Eyebrow("Ona · with the moon", color: .lInk3)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, 8)
     }

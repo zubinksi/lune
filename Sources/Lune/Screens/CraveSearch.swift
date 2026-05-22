@@ -364,7 +364,7 @@ struct SpinnerView: View {
 private func callAnthropic(prompt: String) async throws -> String {
     let apiKey = ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"] ?? ""
     guard !apiKey.isEmpty else {
-        throw NSError(domain: "Lune", code: 0,
+        throw NSError(domain: "Ona", code: 0,
                       userInfo: [NSLocalizedDescriptionKey: "ANTHROPIC_API_KEY not set"])
     }
 

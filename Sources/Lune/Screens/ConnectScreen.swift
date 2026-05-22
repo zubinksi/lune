@@ -23,7 +23,7 @@ struct ConnectScreen: View {
             VStack(alignment: .leading, spacing: 0) {
                 Spacer()
 
-                Eyebrow("Lune · Cycle Nutrition")
+                Eyebrow("Ona · Cycle Nutrition")
 
                 Spacer().frame(height: 14)
 
@@ -39,7 +39,7 @@ struct ConnectScreen: View {
 
                 Spacer().frame(height: 18)
 
-                BodyText(text: "Lune learns your cycle from Apple Health and gently shapes each day's food around it.",
+                BodyText(text: "Ona learns your cycle from Apple Health and gently shapes each day's food around it.",
                          size: 15.5)
                     .frame(maxWidth: 300, alignment: .leading)
 
