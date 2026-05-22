@@ -6,6 +6,7 @@ enum AppScreen: String {
     case signupSymptoms
     case signupDiet
     case signupNotes
+    case signupAPIKey
     case home
 }
 
@@ -221,7 +222,8 @@ class AppState: ObservableObject {
         case .connect:        screen = .signupSymptoms
         case .signupSymptoms: screen = .signupDiet
         case .signupDiet:     screen = .signupNotes
-        case .signupNotes:    screen = .home
+        case .signupNotes:    screen = .signupAPIKey
+        case .signupAPIKey:   screen = .home
         case .home:           break
         }
     }
@@ -230,6 +232,7 @@ class AppState: ObservableObject {
         switch screen {
         case .signupDiet:     screen = .signupSymptoms
         case .signupNotes:    screen = .signupDiet
+        case .signupAPIKey:   screen = .signupNotes
         default:              break
         }
     }

@@ -16,6 +16,10 @@ struct HomeScreen: View {
 
     @State private var showSettings = false
 
+    private var hasAPIKey: Bool {
+        !(UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? "").isEmpty
+    }
+
     private var dateStr: String {
         let fmt = DateFormatter()
         fmt.dateFormat = "EEEE, MMMM d"
@@ -42,8 +46,10 @@ struct HomeScreen: View {
                 moodCheckIn
                 divider(32)
                 nourishmentSection
-                divider(32)
-                CraveSearchSection()
+                if hasAPIKey {
+                    divider(32)
+                    CraveSearchSection()
+                }
                 divider(32)
                 cycleHistoryCard
                 divider(32)
