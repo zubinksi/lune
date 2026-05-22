@@ -96,7 +96,7 @@ struct SignupSymptomsScreen: View {
 
                     Spacer().frame(height: 40)
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, 32)
                 .padding(.top, 32)
             }
 
@@ -161,7 +161,7 @@ struct SignupDietScreen: View {
 
                     Spacer().frame(height: 40)
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, 32)
                 .padding(.top, 32)
             }
 
@@ -251,7 +251,7 @@ struct SignupNotesScreen: View {
 
                     Spacer().frame(height: 40)
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, 32)
                 .padding(.top, 32)
             }
 

@@ -69,7 +69,7 @@ struct HomeScreen: View {
                     .foregroundColor(.lInk2)
             }
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 32)
         .padding(.top, 70)
     }
 
@@ -84,14 +84,19 @@ struct HomeScreen: View {
                 .foregroundColor(.lInk)
         }
         .tracking(-0.4)
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 32)
         .padding(.top, 20)
         .padding(.bottom, 8)
     }
 
     // MARK: - Moon hero
     var moonHero: some View {
-        ZStack {
+        // Near new moon (phase < 0.12 or > 0.88): disk is mostly cream — use dark text
+        let onDarkMoon = phase.phase >= 0.12 && phase.phase <= 0.88
+        let textColor: Color = onDarkMoon ? .lCream : .lInk
+        let shadowColor: Color = onDarkMoon ? .black.opacity(0.45) : .white.opacity(0.5)
+
+        return ZStack {
             MoonView(
                 phase: phase.phase,
                 size: 220,
@@ -105,17 +110,17 @@ struct HomeScreen: View {
                 Text("DAY")
                     .font(LFont.mono(10))
                     .tracking(2)
-                    .foregroundColor(.lCream.opacity(0.85))
+                    .foregroundColor(textColor.opacity(0.75))
                 Text("\(appState.cycleDay)")
                     .font(LFont.display(56))
-                    .foregroundColor(.lCream)
+                    .foregroundColor(textColor)
                     .tracking(0)
                 Text("of \(appState.cycleLength)")
                     .font(LFont.mono(10))
                     .tracking(1.5)
-                    .foregroundColor(.lCream.opacity(0.75))
+                    .foregroundColor(textColor.opacity(0.65))
             }
-            .shadow(color: .black.opacity(0.45), radius: 8, x: 0, y: 0)
+            .shadow(color: shadowColor, radius: 8, x: 0, y: 0)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
@@ -182,7 +187,7 @@ struct HomeScreen: View {
         .padding(.horizontal, 22)
         .padding(.vertical, 20)
         .cardStyle()
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 32)
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.28)) {
                 phaseExpanded.toggle()
@@ -221,7 +226,7 @@ struct HomeScreen: View {
                 .transition(.opacity)
             }
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 32)
         .animation(.easeInOut(duration: 0.18), value: appState.dailyLog.mood)
     }
 
@@ -261,7 +266,7 @@ struct HomeScreen: View {
                 }
             }
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 32)
     }
 
     // MARK: - Symptom log
@@ -305,12 +310,12 @@ struct HomeScreen: View {
                         .transition(.opacity)
                 }
             }
-            .padding(.horizontal, 28)
+            .padding(.horizontal, 32)
             .padding(.vertical, 18)
             .cardStyle()
         }
         .animation(.easeInOut(duration: 0.18), value: savedSymptom)
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 32)
     }
 
     // MARK: - Cycle history (saved recipes from this phase)
@@ -369,7 +374,7 @@ struct HomeScreen: View {
                 .padding(.vertical, 22)
             }
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 32)
     }
 
     // MARK: - Partner share
@@ -411,7 +416,7 @@ struct HomeScreen: View {
                     .foregroundColor(Color.lRule)
             )
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, 32)
     }
 
     // MARK: - Footer
