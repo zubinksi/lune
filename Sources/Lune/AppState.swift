@@ -124,6 +124,7 @@ class AppState: ObservableObject {
         let symptoms = profile.symptoms.isEmpty ? "none" : profile.symptoms.joined(separator: ", ")
         let diet = profile.diet.isEmpty ? "no restrictions" : profile.diet.joined(separator: ", ")
         let mood = dailyLog.mood ?? "not logged"
+        let notes = profile.notes.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let prompt = """
         You are a warm, knowledgeable nutritionist who designs meals around the menstrual cycle.
@@ -134,6 +135,7 @@ class AppState: ObservableObject {
         - Symptoms to address: \(symptoms)
         - Dietary preferences: \(diet)
         - How she feels today: \(mood)
+        - Personal notes: \(notes.isEmpty ? "none" : notes)
 
         Each recipe should be doable in 30 minutes or less and specifically suited to the \(phase.name) phase. Vary the meal timing: one morning, one midday, one evening.
 
