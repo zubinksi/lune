@@ -35,7 +35,11 @@ struct HomeScreen: View {
                 divider(32)
                 CraveSearchSection()
                 divider(32)
+                cycleHistoryCard
+                divider(32)
                 symptomLogSection
+                divider(32)
+                partnerShare
                 divider(24)
                 footer
                 Spacer().frame(height: 60)
@@ -231,7 +235,7 @@ struct HomeScreen: View {
 
             VStack(spacing: 10) {
                 ForEach(recipes) { recipe in
-                    RecipeCard(recipe: recipe)
+                    RecipeCard(recipe: recipe, currentPhase: phase.name)
                 }
             }
         }
@@ -271,7 +275,7 @@ struct HomeScreen: View {
                 }
 
                 if savedSymptom != nil {
-                    Text("Logged. Lune will keep adjusting based on what's helping.")
+                    Text("Logged. Ona will keep adjusting based on what's helping.")
                         .font(LFont.body(12))
                         .italic()
                         .foregroundColor(.lInk3)
@@ -284,6 +288,107 @@ struct HomeScreen: View {
             .cardStyle()
         }
         .animation(.easeInOut(duration: 0.18), value: savedSymptom)
+        .padding(.horizontal, 28)
+    }
+
+    // MARK: - Cycle history (saved recipes from this phase)
+    var cycleHistoryCard: some View {
+        let phaseRecipes = appState.savedRecipes.filter { $0.phase == phase.name }
+
+        return VStack(alignment: .leading, spacing: 0) {
+            SectionHeader(eyebrow: "From last cycle")
+
+            ZStack(alignment: .topTrailing) {
+                Color.lInk
+                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+
+                MoonView(phase: 0.65, size: 160, litColor: .lCream, darkColor: .lInk,
+                         showCraters: false, showGlow: false)
+                    .opacity(0.15)
+                    .offset(x: 40, y: -30)
+                    .allowsHitTesting(false)
+
+                VStack(alignment: .leading, spacing: 0) {
+                    if phaseRecipes.isEmpty {
+                        Eyebrow("Nothing saved yet", color: Color.lCream.opacity(0.55))
+                        Spacer().frame(height: 10)
+                        Text("Bookmark a recipe during your \(phase.name.lowercased()) phase and it'll live here for next time.")
+                            .font(LFont.body(14))
+                            .foregroundColor(Color.lCream.opacity(0.8))
+                            .lineSpacing(4)
+                            .frame(maxWidth: 270, alignment: .leading)
+                    } else {
+                        Eyebrow("Saved this phase", color: Color.lCream.opacity(0.55))
+                        Spacer().frame(height: 10)
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(phaseRecipes.prefix(3)) { r in
+                                HStack {
+                                    Text(r.name)
+                                        .font(LFont.displayRegular(17))
+                                        .foregroundColor(.lCream)
+                                        .lineSpacing(2)
+                                    Spacer()
+                                    Image(systemName: "bookmark.fill")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(Color.lCream.opacity(0.45))
+                                }
+                            }
+                        }
+                        if phaseRecipes.count > 3 {
+                            Spacer().frame(height: 10)
+                            Text("+ \(phaseRecipes.count - 3) more saved")
+                                .font(LFont.mono(10))
+                                .tracking(0.8)
+                                .foregroundColor(Color.lCream.opacity(0.45))
+                        }
+                    }
+                }
+                .padding(.horizontal, 22)
+                .padding(.vertical, 22)
+            }
+        }
+        .padding(.horizontal, 28)
+    }
+
+    // MARK: - Partner share
+    var partnerShare: some View {
+        let name = appState.profile.name
+        let foods = phaseFoods[phase.name]?.joined(separator: ", ") ?? ""
+        let shareText = "\(name) is in her \(phase.name.lowercased()) phase today (day \(appState.cycleDay) of \(appState.cycleLength)).\n\nOna recommends: \(foods).\n\nOna — cycle nutrition, shaped around her."
+
+        return ShareLink(item: shareText) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color.lCream2)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundColor(.lInk)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("For your partner")
+                        .font(LFont.display(18, italic: true))
+                        .foregroundColor(.lInk)
+                    BodyText(text: "A gentle \"what to cook for her this week\" summary.", size: 12.5)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(.lInk2)
+            }
+            .padding(.horizontal, 22)
+            .padding(.vertical, 20)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
+                    .foregroundColor(Color.lRule)
+            )
+        }
         .padding(.horizontal, 28)
     }
 
@@ -325,7 +430,12 @@ struct MoodOptionButton: View {
 // MARK: - Recipe card
 struct RecipeCard: View {
     let recipe: Recipe
-    @State private var isSaved = false
+    let currentPhase: String
+    @EnvironmentObject var appState: AppState
+
+    var isSaved: Bool {
+        appState.savedRecipes.contains { $0.name == recipe.name }
+    }
 
     var iconColor: Color {
         switch recipe.icon {
@@ -337,7 +447,6 @@ struct RecipeCard: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            // Icon tile
             ZStack {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(Color.lCream)
@@ -360,9 +469,18 @@ struct RecipeCard: View {
 
             Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
                 .font(.system(size: 14, weight: .regular))
-                .foregroundColor(.lInk)
+                .foregroundColor(isSaved ? .lPlum : .lInk)
                 .padding(.top, 4)
-                .onTapGesture { isSaved.toggle() }
+                .onTapGesture {
+                    if isSaved {
+                        appState.savedRecipes.removeAll { $0.name == recipe.name }
+                    } else {
+                        var r = recipe
+                        r.phase = currentPhase
+                        appState.savedRecipes.append(r)
+                    }
+                }
+                .animation(.easeInOut(duration: 0.15), value: isSaved)
         }
         .padding(18)
         .cardStyle()

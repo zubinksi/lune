@@ -31,7 +31,7 @@ struct CraveSearchSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "Craving something?", title: "Tell Lune")
+            SectionHeader(eyebrow: "Craving something?", title: "Tell Ona")
 
             VStack(alignment: .leading, spacing: 0) {
                 // Search row
@@ -126,6 +126,7 @@ struct CraveSearchSection: View {
                         ForEach(r.indices, id: \.self) { i in
                             GeneratedRecipeCard(
                                 recipe: r[i],
+                                currentPhase: phase.name,
                                 open: expandedIndex == i
                             ) {
                                 withAnimation(.easeInOut(duration: 0.22)) {
@@ -227,8 +228,11 @@ struct CraveSearchSection: View {
 // MARK: - Generated recipe card
 struct GeneratedRecipeCard: View {
     let recipe: GeneratedRecipeData
+    let currentPhase: String
     let open: Bool
     let onToggle: () -> Void
+    @EnvironmentObject var appState: AppState
+    @State private var isSaved = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -306,27 +310,30 @@ struct GeneratedRecipeCard: View {
 
                         Spacer().frame(height: 14)
 
-                        HStack(spacing: 8) {
-                            Button {} label: {
-                                Text("Save")
-                                    .font(LFont.body(13, weight: .medium))
-                                    .foregroundColor(.lCream)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 38)
-                                    .background(Color.lPlum)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        Button {
+                            if !isSaved {
+                                let r = Recipe(
+                                    name: recipe.name,
+                                    time: recipe.time,
+                                    why: recipe.why,
+                                    ingredients: recipe.ingredients,
+                                    steps: recipe.steps,
+                                    icon: "leaf",
+                                    phase: currentPhase
+                                )
+                                appState.savedRecipes.append(r)
+                                isSaved = true
                             }
-                            Button {} label: {
-                                Text("Add to today")
-                                    .font(LFont.body(13))
-                                    .foregroundColor(.lInk)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 38)
-                                    .background(Color.clear)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Color.lRule, lineWidth: 1))
-                            }
+                        } label: {
+                            Text(isSaved ? "Saved ✓" : "Save recipe")
+                                .font(LFont.body(13, weight: .medium))
+                                .foregroundColor(.lCream)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 38)
+                                .background(isSaved ? Color.lSageDeep : Color.lPlum)
+                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
+                        .animation(.easeInOut(duration: 0.2), value: isSaved)
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 18)

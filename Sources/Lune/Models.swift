@@ -33,6 +33,7 @@ struct Recipe: Codable, Identifiable {
     var steps: [String]
     var icon: String
     var saved: Bool = false
+    var phase: String = ""
 }
 
 // MARK: - Cycle Phase
