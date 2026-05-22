@@ -533,11 +533,14 @@ struct NourishmentCard: View {
         }
     }
 
+    var hasDetail: Bool { !recipe.ingredients.isEmpty || !recipe.steps.isEmpty }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
 
             // Header row — always visible, tap to expand
             Button {
+                guard hasDetail else { return }
                 withAnimation(.easeInOut(duration: 0.22)) { expanded.toggle() }
             } label: {
                 HStack(alignment: .top, spacing: 14) {
@@ -583,6 +586,7 @@ struct NourishmentCard: View {
                             .foregroundColor(.lInk3)
                             .rotationEffect(.degrees(expanded ? 180 : 0))
                             .animation(.easeInOut(duration: 0.22), value: expanded)
+                            .opacity(hasDetail ? 1 : 0)
                     }
                     .padding(.top, 4)
                 }
