@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <!-- Background radial gradient: deep ink centre softening slightly -->
+    <radialGradient id="bg" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#342e28"/>
+      <stop offset="100%" stop-color="#1e1a16"/>
+    </radialGradient>
+    <!-- Lit side gradient: warm cream -->
+    <radialGradient id="lit" cx="40%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#faf5ec"/>
+      <stop offset="100%" stop-color="#ece3d6" stop-opacity="0.95"/>
+    </radialGradient>
+    <!-- Soft glow behind moon -->
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="55%" stop-color="#ece3d6" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#ece3d6" stop-opacity="0.10"/>
+    </radialGradient>
+    <clipPath id="moonclip">
+      <circle cx="512" cy="490" r="310"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
+
+  <!-- Subtle glow halo -->
+  <circle cx="512" cy="490" r="418" fill="url(#glow)"/>
+
+  <!-- Dark moon disc -->
+  <circle cx="512" cy="490" r="310" fill="#2a2520"/>
+
+  <!--
+    Waning gibbous, phase ≈ 0.65 (matches the "From last cycle" decorative moon)
+    litFrac = (1 - 0.65) * 2 = 0.70
+    rx = 310 * (1 - 1.4) = -124  → gibbous, lit on LEFT
+    absRx = 124
+
+    Left semicircle: top (512,180) → CCW → bottom (512,800)
+    Terminator ellipse: bottom → top via LEFT (rx=124, ry=310)
+    k = 0.5523
+  -->
+  <path
+    d="
+      M 512 180
+      A 310 310 0 0 0 512 800
+      C 443.6 800 202 719.2 202 490
+      C 202 260.8 443.6 180 512 180
+      Z
+    "
+    fill="url(#lit)"
+    clip-path="url(#moonclip)"
+  />
+
+  <!--
+    Recalculate terminator properly:
+    Ellipse center: (512, 490), rx=124, ry=310
+    From bottom (512,800) to top (512,180) via LEFT side:
+      bottom→left:  c1=(512-124*0.5523, 800), c2=(512-124, 490+310*0.5523)
+                    c1=(443.5, 800),            c2=(388, 661.2)
+      left→top:     c1=(388, 318.8),            c2=(443.5, 180)
+  -->
+  <path
+    d="
+      M 512 180
+      A 310 310 0 0 0 512 800
+      C 443.5 800 388 661.2 388 490
+      C 388 318.8 443.5 180 512 180
+      Z
+    "
+    fill="url(#lit)"
+    clip-path="url(#moonclip)"
+  />
+
+  <!-- Craters on lit (left) side, very subtle -->
+  <g clip-path="url(#moonclip)" opacity="0.13">
+    <circle cx="430" cy="400" r="22" fill="#2a2520"/>
+    <circle cx="390" cy="520" r="14" fill="#2a2520"/>
+    <circle cx="450" cy="610" r="26" fill="#2a2520"/>
+    <circle cx="480" cy="440" r="10" fill="#2a2520"/>
+    <circle cx="415" cy="650" r="16" fill="#2a2520"/>
+  </g>
+
+  <!-- Rim -->
+  <circle cx="512" cy="490" r="310" fill="none" stroke="#2a2520" stroke-opacity="0.2" stroke-width="2"/>
+
+  <!-- Wordmark: LUNE in Geist Mono style, small, bottom-centre -->
+  <text
+    x="512" y="880"
+    font-family="'Geist Mono', 'SF Mono', monospace"
+    font-size="52"
+    font-weight="400"
+    letter-spacing="18"
+    text-anchor="middle"
+    fill="#ece3d6"
+    opacity="0.55"
+  >LUNE</text>
+</svg>
