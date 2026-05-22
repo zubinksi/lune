@@ -367,8 +367,8 @@ struct SpinnerView: View {
     }
 }
 
-// MARK: - Anthropic API call
-private func callAnthropic(prompt: String) async throws -> String {
+// MARK: - Anthropic API call (shared with AppState for daily nourishment)
+func callAnthropic(prompt: String) async throws -> String {
     let apiKey = ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"] ?? ""
     guard !apiKey.isEmpty else {
         throw NSError(domain: "Ona", code: 0,

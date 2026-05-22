@@ -23,6 +23,11 @@ class AppState: ObservableObject {
     @Published var dailyLog = DailyLog()
     @Published var savedRecipes: [Recipe] = []
 
+    // Daily AI-generated nourishment
+    @Published var dailyNourishment: [Recipe] = []
+    @Published var nourishmentLoading: Bool = false
+    @Published var nourishmentDate: String = ""
+
     private let defaults = UserDefaults.standard
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
@@ -30,7 +35,6 @@ class AppState: ObservableObject {
 
     init() {
         load()
-        // Auto-save 500 ms after the last change so no view needs to call save()
         objectWillChange
             .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
             .sink { [weak self] _ in self?.save() }
@@ -54,8 +58,9 @@ class AppState: ObservableObject {
             screen = s
         }
 
-        // DailyLog resets each calendar day
         let today = todayString()
+
+        // DailyLog resets each calendar day
         if defaults.string(forKey: "dailyLogDate") == today,
            let data = defaults.data(forKey: "dailyLog"),
            let log = try? decoder.decode(DailyLog.self, from: data) {
@@ -65,6 +70,14 @@ class AppState: ObservableObject {
         if let data = defaults.data(forKey: "savedRecipes"),
            let recipes = try? decoder.decode([Recipe].self, from: data) {
             savedRecipes = recipes
+        }
+
+        // Restore today's nourishment if it was already generated today
+        if defaults.string(forKey: "nourishmentDate") == today,
+           let data = defaults.data(forKey: "dailyNourishment"),
+           let recipes = try? decoder.decode([Recipe].self, from: data) {
+            dailyNourishment = recipes
+            nourishmentDate = today
         }
 
         let d = defaults.integer(forKey: "cycleDay")
@@ -85,14 +98,91 @@ class AppState: ObservableObject {
         if let data = try? encoder.encode(savedRecipes) {
             defaults.set(data, forKey: "savedRecipes")
         }
+        if let data = try? encoder.encode(dailyNourishment) {
+            defaults.set(data, forKey: "dailyNourishment")
+            defaults.set(nourishmentDate, forKey: "nourishmentDate")
+        }
         defaults.set(cycleDay, forKey: "cycleDay")
         defaults.set(cycleLength, forKey: "cycleLength")
     }
 
-    private func todayString() -> String {
+    func todayString() -> String {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         return f.string(from: Date())
+    }
+
+    // MARK: - Daily nourishment generation
+
+    func loadDailyNourishment() async {
+        let today = todayString()
+        guard nourishmentDate != today || dailyNourishment.isEmpty else { return }
+
+        nourishmentLoading = true
+
+        let phase = phaseInfo
+        let symptoms = profile.symptoms.isEmpty ? "none" : profile.symptoms.joined(separator: ", ")
+        let diet = profile.diet.isEmpty ? "no restrictions" : profile.diet.joined(separator: ", ")
+        let mood = dailyLog.mood ?? "not logged"
+
+        let prompt = """
+        You are a warm, knowledgeable nutritionist who designs meals around the menstrual cycle.
+
+        Generate exactly 3 complete recipes for someone in their \(phase.name) phase, day \(cycleDay) of a \(cycleLength)-day cycle.
+
+        Context:
+        - Symptoms to address: \(symptoms)
+        - Dietary preferences: \(diet)
+        - How she feels today: \(mood)
+
+        Each recipe should be doable in 30 minutes or less and specifically suited to the \(phase.name) phase. Vary the meal timing: one morning, one midday, one evening.
+
+        Respond with ONLY a valid JSON object — no prose, no markdown, no code fences:
+
+        {
+          "recipes": [
+            {
+              "name": "short evocative name (max 6 words)",
+              "time": "Morning" | "Midday" | "Evening",
+              "why": "ONE warm sentence (max 18 words) tying it to her \(phase.name) phase",
+              "ingredients": ["7-9 short ingredient lines with quantities"],
+              "steps": ["3-5 brief prep steps, one sentence each"]
+            }
+          ]
+        }
+        """
+
+        do {
+            let text = try await callAnthropic(prompt: prompt)
+            let cleaned = text
+                .replacingOccurrences(of: "^```(?:json)?\\s*", with: "", options: .regularExpression)
+                .replacingOccurrences(of: "```\\s*$", with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let decoded = try JSONDecoder().decode(RecipeResponse.self, from: Data(cleaned.utf8))
+            guard decoded.recipes.count >= 1 else { throw URLError(.badServerResponse) }
+
+            dailyNourishment = decoded.recipes.map { r in
+                Recipe(name: r.name, time: r.time, why: r.why,
+                       ingredients: r.ingredients, steps: r.steps,
+                       icon: defaultIcon(for: phase.name),
+                       phase: phase.name)
+            }
+            nourishmentDate = today
+        } catch {
+            // Fall back silently — HomeScreen shows static cards when dailyNourishment is empty
+        }
+
+        nourishmentLoading = false
+    }
+
+    private func defaultIcon(for phase: String) -> String {
+        switch phase {
+        case "Menstrual":  return "bowl"
+        case "Follicular": return "leaf"
+        case "Ovulatory":  return "fruit"
+        default:           return "salmon"
+        }
     }
 
     // MARK: - HealthKit connect flow

@@ -46,7 +46,10 @@ struct HomeScreen: View {
             }
         }
         .background(Color.lCream.ignoresSafeArea())
-        .onAppear { refreshIfNeeded() }
+        .onAppear {
+            refreshIfNeeded()
+            Task { await appState.loadDailyNourishment() }
+        }
     }
 
     // MARK: - Top bar
@@ -230,12 +233,25 @@ struct HomeScreen: View {
     // MARK: - Nourishment
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "Today", title: "Nourishment",
-                          actionLabel: "See all", actionHandler: {})
+            SectionHeader(eyebrow: "Today", title: "Nourishment")
 
-            VStack(spacing: 10) {
-                ForEach(recipes) { recipe in
-                    RecipeCard(recipe: recipe, currentPhase: phase.name)
+            if appState.nourishmentLoading && appState.dailyNourishment.isEmpty {
+                // First-load skeleton
+                HStack(spacing: 12) {
+                    SpinnerView()
+                    Text("Preparing today's nourishment…")
+                        .font(LFont.body(14))
+                        .foregroundColor(.lInk2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+                .cardStyle()
+            } else {
+                let cards = appState.dailyNourishment.isEmpty ? recipes : appState.dailyNourishment
+                VStack(spacing: 10) {
+                    ForEach(cards) { recipe in
+                        NourishmentCard(recipe: recipe, currentPhase: phase.name)
+                    }
                 }
             }
         }
@@ -481,6 +497,137 @@ struct RecipeCard: View {
                     }
                 }
                 .animation(.easeInOut(duration: 0.15), value: isSaved)
+        }
+        .padding(18)
+        .cardStyle()
+    }
+}
+
+// MARK: - Nourishment card (expandable, with full recipe)
+struct NourishmentCard: View {
+    let recipe: Recipe
+    let currentPhase: String
+    @EnvironmentObject var appState: AppState
+    @State private var expanded = false
+
+    var isSaved: Bool {
+        appState.savedRecipes.contains { $0.name == recipe.name }
+    }
+
+    var iconColor: Color {
+        switch recipe.icon {
+        case "salmon": return .lTerracottaDeep
+        case "leaf":   return .lSage
+        default:       return .lTerracotta
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            // Header row — always visible, tap to expand
+            Button {
+                withAnimation(.easeInOut(duration: 0.22)) { expanded.toggle() }
+            } label: {
+                HStack(alignment: .top, spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Color.lCream)
+                            .frame(width: 64, height: 64)
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(Color.lRule, lineWidth: 1))
+                        FoodIconView(kind: recipe.icon, size: 42, color: iconColor)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Eyebrow(recipe.time.uppercased())
+                        Text(recipe.name)
+                            .font(LFont.displayRegular(19))
+                            .foregroundColor(.lInk)
+                            .lineSpacing(2)
+                            .multilineTextAlignment(.leading)
+                        BodyText(text: recipe.why, size: 12.5)
+                            .lineSpacing(2)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    VStack(alignment: .trailing, spacing: 10) {
+                        Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundColor(isSaved ? .lPlum : .lInk)
+                            .onTapGesture {
+                                if isSaved {
+                                    appState.savedRecipes.removeAll { $0.name == recipe.name }
+                                } else {
+                                    var r = recipe
+                                    r.phase = currentPhase
+                                    appState.savedRecipes.append(r)
+                                }
+                            }
+                            .animation(.easeInOut(duration: 0.15), value: isSaved)
+
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundColor(.lInk3)
+                            .rotationEffect(.degrees(expanded ? 180 : 0))
+                            .animation(.easeInOut(duration: 0.22), value: expanded)
+                    }
+                    .padding(.top, 4)
+                }
+            }
+            .buttonStyle(.plain)
+
+            // Expanded detail
+            if expanded && (!recipe.ingredients.isEmpty || !recipe.steps.isEmpty) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Divider()
+                        .background(Color.lRule)
+                        .padding(.vertical, 14)
+
+                    if !recipe.ingredients.isEmpty {
+                        Eyebrow("Ingredients")
+                        Spacer().frame(height: 10)
+                        VStack(alignment: .leading, spacing: 6) {
+                            ForEach(recipe.ingredients, id: \.self) { item in
+                                HStack(alignment: .top, spacing: 8) {
+                                    Circle()
+                                        .fill(Color.lInk3)
+                                        .frame(width: 4, height: 4)
+                                        .padding(.top, 6)
+                                    Text(item)
+                                        .font(LFont.body(13.5))
+                                        .foregroundColor(.lInk2)
+                                        .lineSpacing(2)
+                                }
+                            }
+                        }
+                        Spacer().frame(height: 16)
+                    }
+
+                    if !recipe.steps.isEmpty {
+                        Eyebrow("How to make it")
+                        Spacer().frame(height: 10)
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(Array(recipe.steps.enumerated()), id: \.offset) { i, step in
+                                HStack(alignment: .top, spacing: 10) {
+                                    Text("\(i + 1)")
+                                        .font(LFont.mono(10))
+                                        .tracking(0.5)
+                                        .foregroundColor(.lInk3)
+                                        .frame(width: 16, alignment: .trailing)
+                                        .padding(.top, 3)
+                                    Text(step)
+                                        .font(LFont.body(13.5))
+                                        .foregroundColor(.lInk2)
+                                        .lineSpacing(3)
+                                }
+                            }
+                        }
+                    }
+                }
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
         }
         .padding(18)
         .cardStyle()
