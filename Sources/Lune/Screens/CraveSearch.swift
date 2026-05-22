@@ -4,7 +4,7 @@ import SwiftUI
 // Calls the Anthropic Messages API to generate two phase-tuned recipes.
 // Set ANTHROPIC_API_KEY in the scheme environment, or hardcode for dev only.
 
-private struct GeneratedRecipeData: Codable {
+struct GeneratedRecipeData: Codable {
     let name: String
     let time: String
     let why: String
@@ -12,7 +12,7 @@ private struct GeneratedRecipeData: Codable {
     let steps: [String]
 }
 
-private struct RecipeResponse: Codable {
+struct RecipeResponse: Codable {
     let recipes: [GeneratedRecipeData]
 }
 

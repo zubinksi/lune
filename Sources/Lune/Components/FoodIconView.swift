@@ -53,8 +53,7 @@ private struct BowlIcon: View {
             var steam = Path()
             steam.move(to: CGPoint(x: 28 * sc, y: 8 * sc))
             steam.addLine(to: CGPoint(x: 28 * sc, y: 14 * sc))
-            ctx.stroke(steam, with: .color(color), lineWidth: 1.4 * sc,
-                       style: StrokeStyle(lineCap: .round))
+            ctx.stroke(steam, with: .color(color), style: StrokeStyle(lineWidth: 1.4 * sc, lineCap: .round))
 
             var drop = Path()
             drop.move(to: CGPoint(x: 28 * sc, y: 9 * sc))
@@ -83,8 +82,7 @@ private struct SalmonIcon: View {
                            control1: CGPoint(x: 44 * sc, y: 26 * sc),
                            control2: CGPoint(x: 18 * sc, y: 26 * sc))
             upper.closeSubpath()
-            ctx.stroke(upper, with: .color(color), lineWidth: 1.4 * sc,
-                       style: StrokeStyle(lineJoin: .round))
+            ctx.stroke(upper, with: .color(color), style: StrokeStyle(lineWidth: 1.4 * sc, lineJoin: .round))
 
             // Lower body
             var lower = Path()
@@ -92,8 +90,7 @@ private struct SalmonIcon: View {
             lower.addCurve(to: CGPoint(x: 48 * sc, y: 36 * sc),
                            control1: CGPoint(x: 16 * sc, y: 42 * sc),
                            control2: CGPoint(x: 36 * sc, y: 42 * sc))
-            ctx.stroke(lower, with: .color(color), lineWidth: 1.4 * sc,
-                       style: StrokeStyle(lineJoin: .round))
+            ctx.stroke(lower, with: .color(color), style: StrokeStyle(lineWidth: 1.4 * sc, lineJoin: .round))
 
             // Tail fins
             let fins: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [
@@ -103,8 +100,7 @@ private struct SalmonIcon: View {
                 var fin = Path()
                 fin.move(to: CGPoint(x: x1 * sc, y: y1 * sc))
                 fin.addLine(to: CGPoint(x: x2 * sc, y: y2 * sc))
-                ctx.stroke(fin, with: .color(color), lineWidth: 1.4 * sc,
-                           style: StrokeStyle(lineCap: .round))
+                ctx.stroke(fin, with: .color(color), style: StrokeStyle(lineWidth: 1.4 * sc, lineCap: .round))
             }
 
             // Eye
@@ -119,8 +115,7 @@ private struct SalmonIcon: View {
                 var l = Path()
                 l.move(to: CGPoint(x: x1 * sc, y: y1 * sc))
                 l.addLine(to: CGPoint(x: x2 * sc, y: y2 * sc))
-                ctx.stroke(l, with: .color(color.opacity(0.5)), lineWidth: 0.8 * sc,
-                           style: StrokeStyle(lineCap: .round))
+                ctx.stroke(l, with: .color(color.opacity(0.5)), style: StrokeStyle(lineWidth: 0.8 * sc, lineCap: .round))
             }
         }
     }
@@ -141,14 +136,12 @@ private struct LeafIcon: View {
                           control1: CGPoint(x: 42 * sc, y: 26 * sc),
                           control2: CGPoint(x: 26 * sc, y: 42 * sc))
             leaf.closeSubpath()
-            ctx.stroke(leaf, with: .color(color), lineWidth: 1.4 * sc,
-                       style: StrokeStyle(lineJoin: .round))
+            ctx.stroke(leaf, with: .color(color), style: StrokeStyle(lineWidth: 1.4 * sc, lineJoin: .round))
 
             var spine = Path()
             spine.move(to: CGPoint(x: 14 * sc, y: 42 * sc))
             spine.addLine(to: CGPoint(x: 42 * sc, y: 14 * sc))
-            ctx.stroke(spine, with: .color(color), lineWidth: 1.4 * sc,
-                       style: StrokeStyle(lineCap: .round))
+            ctx.stroke(spine, with: .color(color), style: StrokeStyle(lineWidth: 1.4 * sc, lineCap: .round))
 
             let veins: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [
                 (20, 36, 28, 28), (26, 30, 32, 24), (32, 24, 36, 20)
@@ -157,8 +150,7 @@ private struct LeafIcon: View {
                 var v = Path()
                 v.move(to: CGPoint(x: x1 * sc, y: y1 * sc))
                 v.addLine(to: CGPoint(x: x2 * sc, y: y2 * sc))
-                ctx.stroke(v, with: .color(color.opacity(0.6)), lineWidth: 0.9 * sc,
-                           style: StrokeStyle(lineCap: .round))
+                ctx.stroke(v, with: .color(color.opacity(0.6)), style: StrokeStyle(lineWidth: 0.9 * sc, lineCap: .round))
             }
         }
     }
@@ -204,8 +196,7 @@ private struct CupIcon: View {
             cup.addQuadCurve(to: CGPoint(x: 14 * sc, y: 36 * sc),
                              control: CGPoint(x: 26 * sc, y: 44 * sc))
             cup.closeSubpath()
-            ctx.stroke(cup, with: .color(color), lineWidth: 1.4 * sc,
-                       style: StrokeStyle(lineJoin: .round))
+            ctx.stroke(cup, with: .color(color), style: StrokeStyle(lineWidth: 1.4 * sc, lineJoin: .round))
 
             var handle = Path()
             handle.move(to: CGPoint(x: 38 * sc, y: 22 * sc))
@@ -216,8 +207,7 @@ private struct CupIcon: View {
                           endAngle: .degrees(90),
                           clockwise: false)
             handle.addLine(to: CGPoint(x: 38 * sc, y: 30 * sc))
-            ctx.stroke(handle, with: .color(color), lineWidth: 1.4 * sc,
-                       style: StrokeStyle(lineCap: .round))
+            ctx.stroke(handle, with: .color(color), style: StrokeStyle(lineWidth: 1.4 * sc, lineCap: .round))
 
             let steam: [(CGFloat, CGFloat)] = [(20, 10), (28, 10), (36, 10)]
             for (x, startY) in steam {
@@ -229,8 +219,7 @@ private struct CupIcon: View {
                 st.addCurve(to: CGPoint(x: x * sc, y: (startY + 8) * sc),
                             control1: CGPoint(x: x * sc, y: (startY + 4) * sc),
                             control2: CGPoint(x: (x + 2) * sc, y: (startY + 6) * sc))
-                ctx.stroke(st, with: .color(color.opacity(0.6)), lineWidth: 1.2 * sc,
-                           style: StrokeStyle(lineCap: .round))
+                ctx.stroke(st, with: .color(color.opacity(0.6)), style: StrokeStyle(lineWidth: 1.2 * sc, lineCap: .round))
             }
         }
     }
@@ -250,8 +239,7 @@ private struct FruitIcon: View {
             var stem = Path()
             stem.move(to: CGPoint(x: 28 * sc, y: 16 * sc))
             stem.addLine(to: CGPoint(x: 29 * sc, y: 9 * sc))
-            ctx.stroke(stem, with: .color(Color.lSage), lineWidth: 1.4 * sc,
-                       style: StrokeStyle(lineCap: .round))
+            ctx.stroke(stem, with: .color(Color.lSage), style: StrokeStyle(lineWidth: 1.4 * sc, lineCap: .round))
 
             // Leaf on stem
             var leaf = Path()
@@ -259,8 +247,7 @@ private struct FruitIcon: View {
             leaf.addCurve(to: CGPoint(x: 34 * sc, y: 9 * sc),
                           control1: CGPoint(x: 32 * sc, y: 10 * sc),
                           control2: CGPoint(x: 34 * sc, y: 9 * sc))
-            ctx.stroke(leaf, with: .color(Color.lSage), lineWidth: 1.4 * sc,
-                       style: StrokeStyle(lineCap: .round))
+            ctx.stroke(leaf, with: .color(Color.lSage), style: StrokeStyle(lineWidth: 1.4 * sc, lineCap: .round))
         }
     }
 }

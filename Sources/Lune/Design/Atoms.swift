@@ -170,8 +170,8 @@ struct TagChip: View {
 
 // MARK: - Section header
 struct SectionHeader: View {
-    let eyebrow: String?
-    let title: String?
+    var eyebrow: String? = nil
+    var title: String? = nil
     var actionLabel: String? = nil
     var actionHandler: (() -> Void)? = nil
 
@@ -200,7 +200,7 @@ struct SectionHeader: View {
 struct CardBackground: ViewModifier {
     var radius: CGFloat = 22
     var background: Color = .lPaper
-    func modify(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .background(background)
             .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
