@@ -185,6 +185,11 @@ class AppState: ObservableObject {
         }
     }
 
+    func clearNourishmentCache() {
+        dailyNourishment = []
+        nourishmentDate = ""
+    }
+
     // MARK: - HealthKit connect flow
 
     func connectHealthKit() async {

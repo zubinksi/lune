@@ -14,6 +14,8 @@ struct HomeScreen: View {
         Task { await appState.loadCycleData() }
     }
 
+    @State private var showSettings = false
+
     private var dateStr: String {
         let fmt = DateFormatter()
         fmt.dateFormat = "EEEE, MMMM d"
@@ -50,6 +52,10 @@ struct HomeScreen: View {
             refreshIfNeeded()
             Task { await appState.loadDailyNourishment() }
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsScreen()
+                .environmentObject(appState)
+        }
     }
 
     // MARK: - Top bar
@@ -57,7 +63,7 @@ struct HomeScreen: View {
         HStack {
             Eyebrow(dateStr)
             Spacer()
-            Button {} label: {
+            Button { showSettings = true } label: {
                 Image(systemName: "gearshape")
                     .font(.system(size: 20, weight: .light))
                     .foregroundColor(.lInk2)
