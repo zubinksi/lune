@@ -22,6 +22,7 @@
 		A1000001000013000000001 /* CraveSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000013000000001 /* CraveSearch.swift */; };
 		A1000001000014000000001 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2000001000014000000001 /* HealthKit.framework */; };
 		A1000001000018000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000001000018000000001 /* Assets.xcassets */; };
+		A1000001000019000000001 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000019000000001 /* HealthKitManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +44,7 @@
 		A2000001000016000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A2000001000017000000001 /* Lune.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Lune.entitlements; sourceTree = "<group>"; };
 		A2000001000018000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A2000001000019000000001 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +75,7 @@
 				A2000001000001000000001 /* LuneApp.swift */,
 				A2000001000002000000001 /* AppState.swift */,
 				A2000001000003000000001 /* Models.swift */,
+				A2000001000019000000001 /* HealthKitManager.swift */,
 				A4000001000003000000001 /* Design */,
 				A4000001000005000000001 /* Components */,
 				A4000001000007000000001 /* Screens */,
@@ -221,6 +224,7 @@
 				A1000001000011000000001 /* SignupFlow.swift in Sources */,
 				A1000001000012000000001 /* HomeScreen.swift in Sources */,
 				A1000001000013000000001 /* CraveSearch.swift in Sources */,
+				A1000001000019000000001 /* HealthKitManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

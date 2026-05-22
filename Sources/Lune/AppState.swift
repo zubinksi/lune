@@ -12,23 +12,47 @@ enum AppScreen {
 class AppState: ObservableObject {
     @Published var screen: AppScreen = .connect
 
-    // Profile
     @Published var profile = Profile()
 
-    // Cycle — demo defaults, real implementation reads HealthKit
-    @Published var cycleDay: Int = 19
+    // Derived from HealthKit after authorization; sensible defaults until then
+    @Published var cycleDay: Int = 1
     @Published var cycleLength: Int = 28
+    @Published var healthKitLoading: Bool = false
+    @Published var healthKitError: String? = nil
 
-    // Today's log (keyed by date string in production; single session here)
     @Published var dailyLog = DailyLog()
-
     @Published var savedRecipes: [Recipe] = []
 
     var phaseInfo: CyclePhaseInfo {
         cyclePhase(day: cycleDay, length: cycleLength)
     }
 
-    // Navigation helpers
+    // MARK: - HealthKit connect flow
+    // Called from ConnectScreen "Connect Apple Health" button.
+    func connectHealthKit() async {
+        healthKitLoading = true
+        healthKitError = nil
+
+        do {
+            try await HealthKitManager.shared.requestAuthorization()
+            profile.healthKitConnected = true
+            await loadCycleData()
+        } catch {
+            healthKitError = "Couldn't connect to Apple Health. You can try again from Settings."
+        }
+
+        healthKitLoading = false
+        advance()
+    }
+
+    // Silently refresh cycle data (e.g. on app foreground).
+    func loadCycleData() async {
+        let (day, length) = await HealthKitManager.shared.fetchCycleData()
+        cycleDay = day
+        cycleLength = length
+    }
+
+    // MARK: - Navigation
     func advance() {
         switch screen {
         case .connect:        screen = .signupSymptoms

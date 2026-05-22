@@ -8,6 +8,12 @@ struct HomeScreen: View {
     private var phaseColor: Color { Color.phase(named: phase.name) }
     private var recipes: [Recipe] { defaultRecipes[phase.name] ?? defaultRecipes["Luteal"]! }
 
+    // Silently refresh from HealthKit each time the dashboard appears
+    private func refreshIfNeeded() {
+        guard appState.profile.healthKitConnected else { return }
+        Task { await appState.loadCycleData() }
+    }
+
     private var dateStr: String {
         let fmt = DateFormatter()
         fmt.dateFormat = "EEEE, MMMM d"
@@ -42,6 +48,7 @@ struct HomeScreen: View {
             }
         }
         .background(Color.lCream.ignoresSafeArea())
+        .onAppear { refreshIfNeeded() }
     }
 
     // MARK: - Top bar

@@ -84,10 +84,27 @@ struct ConnectScreen: View {
 
                 Spacer().frame(height: 16)
 
-                PillButton(label: "Connect Apple Health") {
-                    appState.profile.healthKitConnected = true
-                    // Real impl: call HKHealthStore.requestAuthorization here
-                    appState.advance()
+                if appState.healthKitLoading {
+                    HStack(spacing: 10) {
+                        SpinnerView()
+                        Text("Connecting to Apple Health…")
+                            .font(LFont.body(14))
+                            .foregroundColor(.lInk2)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                } else {
+                    PillButton(label: "Connect Apple Health") {
+                        Task { await appState.connectHealthKit() }
+                    }
+                }
+
+                if let err = appState.healthKitError {
+                    Text(err)
+                        .font(LFont.body(12.5))
+                        .foregroundColor(.lRed)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
                 }
 
                 Spacer().frame(height: 10)
