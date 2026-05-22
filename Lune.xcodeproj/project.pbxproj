@@ -21,6 +21,7 @@
 		A1000001000012000000001 /* HomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000012000000001 /* HomeScreen.swift */; };
 		A1000001000013000000001 /* CraveSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000013000000001 /* CraveSearch.swift */; };
 		A1000001000014000000001 /* HealthKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2000001000014000000001 /* HealthKit.framework */; };
+		A1000001000018000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000001000018000000001 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,7 @@
 		A2000001000015000000001 /* Lune.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Lune.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A2000001000016000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A2000001000017000000001 /* Lune.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Lune.entitlements; sourceTree = "<group>"; };
+		A2000001000018000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +117,7 @@
 			children = (
 				A2000001000016000000001 /* Info.plist */,
 				A2000001000017000000001 /* Lune.entitlements */,
+				A2000001000018000000001 /* Assets.xcassets */,
 			);
 			name = "Lune (Support)";
 			path = Lune;
@@ -194,6 +197,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1000001000018000000001 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
