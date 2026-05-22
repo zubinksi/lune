@@ -13,6 +13,8 @@ extension Color {
     static let lTerracottaDeep = Color(hex: "a86a52")
     static let lSage         = Color(hex: "8a9a7a")   // cool accent
     static let lSageDeep     = Color(hex: "6e8262")
+    static let lPlum         = Color(hex: "7a4f6e")   // primary accent
+    static let lPlumDeep     = Color(hex: "56304e")   // pressed / dark accent
     static let lRed          = Color(hex: "9a4a3e")   // menstrual / error
 
     init(hex: String) {

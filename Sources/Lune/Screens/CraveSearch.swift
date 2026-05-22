@@ -53,7 +53,7 @@ struct CraveSearchSection: View {
                             .foregroundColor(canSubmit ? .lCream : .lInk3)
                             .padding(.horizontal, 16)
                             .frame(height: 38)
-                            .background(canSubmit ? Color.lInk : Color.lCream2)
+                            .background(canSubmit ? Color.lPlum : Color.lCream2)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .disabled(!canSubmit)
@@ -313,7 +313,7 @@ struct GeneratedRecipeCard: View {
                                     .foregroundColor(.lCream)
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 38)
-                                    .background(Color.lInk)
+                                    .background(Color.lPlum)
                                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             }
                             Button {} label: {

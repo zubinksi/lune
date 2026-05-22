@@ -43,7 +43,7 @@ struct ProgressDots: View {
         HStack(spacing: 6) {
             ForEach(0..<total, id: \.self) { i in
                 Capsule()
-                    .fill(i <= step ? Color.lInk : Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.15))
+                    .fill(i <= step ? Color.lPlum : Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.15))
                     .frame(width: i == step ? 22 : 6, height: 6)
                     .animation(.easeInOut(duration: 0.25), value: step)
             }
@@ -213,6 +213,19 @@ struct SignupNotesScreen: View {
                     BodyText(text: "Allergies, cravings you can't quit, things you'd love more of. Lune will keep these in mind.")
 
                     Spacer().frame(height: 22)
+
+                    // Name field
+                    Eyebrow("Your name")
+                    Spacer().frame(height: 8)
+                    TextField("e.g. Genesha", text: $appState.profile.name)
+                        .font(LFont.body(15))
+                        .foregroundColor(.lInk)
+                        .padding(18)
+                        .background(Color.lPaper)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.lRule, lineWidth: 1))
+
+                    Spacer().frame(height: 18)
 
                     ZStack(alignment: .topLeading) {
                         if appState.profile.notes.isEmpty {

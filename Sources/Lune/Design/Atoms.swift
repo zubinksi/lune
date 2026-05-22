@@ -95,7 +95,7 @@ struct PillButton: View {
 
     private var bgColor: Color {
         switch variant {
-        case .primary:   return .lInk
+        case .primary:   return .lPlum
         case .secondary: return .clear
         case .ghost:     return .clear
         }
@@ -104,13 +104,13 @@ struct PillButton: View {
     private var fgColor: Color {
         switch variant {
         case .primary:   return .lCream
-        case .secondary: return .lInk
+        case .secondary: return .lPlum
         case .ghost:     return .lInk2
         }
     }
 
     private var strokeColor: Color {
-        variant == .secondary ? .lInk : .clear
+        variant == .secondary ? .lPlum : .clear
     }
 }
 
@@ -135,12 +135,12 @@ struct ChipButton: View {
                 .tracking(0.05)
                 .padding(.horizontal, 18)
                 .frame(height: 44)
-                .background(selected ? Color.lInk : Color.clear)
+                .background(selected ? Color.lPlum : Color.clear)
                 .foregroundColor(selected ? .lCream : .lInk)
                 .clipShape(Capsule())
                 .overlay(
                     Capsule().stroke(
-                        selected ? Color.lInk : Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.18),
+                        selected ? Color.lPlum : Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.18),
                         lineWidth: 1
                     )
                 )

@@ -378,11 +378,11 @@ struct HomeScreen: View {
                                 .font(LFont.body(13.5))
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 44)
-                                .background(savedSymptom == o ? Color.lInk : Color.clear)
+                                .background(savedSymptom == o ? Color.lPlum : Color.clear)
                                 .foregroundColor(savedSymptom == o ? .lCream : .lInk)
                                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(savedSymptom == o ? Color.lInk : Color.lRule, lineWidth: 1))
+                                    .stroke(savedSymptom == o ? Color.lPlum : Color.lRule, lineWidth: 1))
                         }
                         .animation(.easeInOut(duration: 0.15), value: savedSymptom)
                     }
@@ -467,11 +467,11 @@ struct MoodOptionButton: View {
                 .tracking(0.1)
                 .frame(maxWidth: .infinity)
                 .frame(height: 64)
-                .background(selected ? Color.lInk : Color.lPaper)
+                .background(selected ? Color.lPlum : Color.lPaper)
                 .foregroundColor(selected ? .lCream : .lInk)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(selected ? Color.lInk : Color.lRule, lineWidth: 1))
+                    .stroke(selected ? Color.lPlum : Color.lRule, lineWidth: 1))
         }
         .animation(.easeInOut(duration: 0.18), value: selected)
     }
