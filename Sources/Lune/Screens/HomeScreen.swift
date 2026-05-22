@@ -20,24 +20,9 @@ struct HomeScreen: View {
         !(UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? "").isEmpty
     }
 
-    private var dateStr: String {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "EEEE, MMMM d"
-        return fmt.string(from: Date()).uppercased()
-    }
-
-    private var hebrewDateStr: String {
-        let fmt = DateFormatter()
-        fmt.calendar = Calendar(identifier: .hebrew)
-        fmt.locale = Locale(identifier: "en_US")
-        fmt.dateFormat = "d MMMM"
-        return fmt.string(from: Date())
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                topBar
                 greeting
                 moonHero
                 phaseNameAndStrip
@@ -59,6 +44,7 @@ struct HomeScreen: View {
                 Spacer().frame(height: 60)
             }
         }
+        .scrollDismissesKeyboard(.interactively)
         .background(Color.lCream.ignoresSafeArea())
         .onAppear {
             refreshIfNeeded()
@@ -70,27 +56,6 @@ struct HomeScreen: View {
         }
     }
 
-    // MARK: - Top bar
-    var topBar: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 2) {
-                Eyebrow(dateStr)
-                Text(hebrewDateStr)
-                    .font(LFont.mono(9))
-                    .tracking(0.5)
-                    .foregroundColor(.lInk3)
-            }
-            Spacer()
-            Button { showSettings = true } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 20, weight: .light))
-                    .foregroundColor(.lInk2)
-            }
-        }
-        .padding(.horizontal, 50)
-        .padding(.top, 70)
-    }
-
     private var timeOfDayGreeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
@@ -100,19 +65,30 @@ struct HomeScreen: View {
         }
     }
 
-    // MARK: - Greeting
+    // MARK: - Greeting (with inline settings icon)
     var greeting: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(timeOfDayGreeting)
-                .font(LFont.display(32))
-                .foregroundColor(.lInk)
-            Text("\(appState.profile.name).")
-                .font(LFont.display(32, italic: true))
-                .foregroundColor(.lInk)
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(timeOfDayGreeting)
+                    .font(LFont.display(32))
+                    .foregroundColor(.lInk)
+                Text("\(appState.profile.name).")
+                    .font(LFont.display(32, italic: true))
+                    .foregroundColor(.lInk)
+            }
+            .tracking(-0.4)
+
+            Spacer()
+
+            Button { showSettings = true } label: {
+                Image(systemName: "gearshape")
+                    .font(.system(size: 20, weight: .light))
+                    .foregroundColor(.lInk2)
+            }
+            .padding(.top, 8)
         }
-        .tracking(-0.4)
         .padding(.horizontal, 50)
-        .padding(.top, 20)
+        .padding(.top, 70)
         .padding(.bottom, 8)
     }
 
@@ -167,25 +143,12 @@ struct HomeScreen: View {
     }
 
     // MARK: - Phase education card
-    @State private var phaseExpanded = false
-
     var phaseCard: some View {
         let explainer = phaseExplainer[phase.name] ?? ""
         let foods = phaseFoods[phase.name] ?? []
 
         return VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Eyebrow("Why this phase matters", color: phaseColor)
-                Spacer()
-                ZStack {
-                    Circle().fill(Color.lCream).frame(width: 22, height: 22)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundColor(.lInk)
-                        .rotationEffect(.degrees(phaseExpanded ? 180 : 0))
-                        .animation(.easeInOut(duration: 0.25), value: phaseExpanded)
-                }
-            }
+            Eyebrow("Why this phase matters", color: phaseColor)
 
             Spacer().frame(height: 8)
 
@@ -194,32 +157,22 @@ struct HomeScreen: View {
                 .foregroundColor(.lInk)
                 .lineSpacing(4)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .lineLimit(phaseExpanded ? nil : 2)
-                .animation(.easeInOut(duration: 0.28), value: phaseExpanded)
 
-            if phaseExpanded {
-                Spacer().frame(height: 14)
-                Divider().background(Color.lRule)
-                Spacer().frame(height: 14)
-                Eyebrow("Lean into")
-                Spacer().frame(height: 8)
-                FlowLayout(spacing: 6) {
-                    ForEach(foods, id: \.self) { food in
-                        TagChip(label: food, background: .lCream)
-                    }
+            Spacer().frame(height: 14)
+            Divider().background(Color.lRule)
+            Spacer().frame(height: 14)
+            Eyebrow("Lean into")
+            Spacer().frame(height: 8)
+            FlowLayout(spacing: 6) {
+                ForEach(foods, id: \.self) { food in
+                    TagChip(label: food, background: .lCream)
                 }
-                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(.horizontal, 22)
         .padding(.vertical, 20)
         .cardStyle()
         .padding(.horizontal, 50)
-        .onTapGesture {
-            withAnimation(.easeInOut(duration: 0.28)) {
-                phaseExpanded.toggle()
-            }
-        }
     }
 
     // MARK: - Mood check-in
@@ -269,9 +222,19 @@ struct HomeScreen: View {
     }
 
     // MARK: - Nourishment
+    @State private var nourishmentRefreshed = false
+
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "Today", title: "Nourishment")
+            SectionHeader(eyebrow: "Today", title: "Nourishment",
+                          actionLabel: nourishmentRefreshed ? "refreshing" : "refresh") {
+                appState.clearNourishmentCache()
+                nourishmentRefreshed = true
+                Task {
+                    await appState.loadDailyNourishment()
+                    nourishmentRefreshed = false
+                }
+            }
 
             if appState.nourishmentLoading && appState.dailyNourishment.isEmpty {
                 // First-load skeleton
@@ -413,7 +376,7 @@ struct HomeScreen: View {
 
     // MARK: - Footer
     var footer: some View {
-        Eyebrow("Ona · with the moon", color: .lInk3)
+        Eyebrow("Ona · cycle nutrition, shaped for her", color: .lInk3)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.vertical, 8)
     }
