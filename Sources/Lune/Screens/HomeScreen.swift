@@ -62,7 +62,7 @@ struct HomeScreen: View {
                     .foregroundColor(.lInk2)
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 28)
         .padding(.top, 70)
     }
 
@@ -77,7 +77,7 @@ struct HomeScreen: View {
                 .foregroundColor(.lInk)
         }
         .tracking(-0.4)
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 28)
         .padding(.top, 20)
         .padding(.bottom, 8)
     }
@@ -98,7 +98,7 @@ struct HomeScreen: View {
                 Text("DAY")
                     .font(LFont.mono(10))
                     .tracking(2)
-                    .foregroundColor(.lCream.opacity(0.7))
+                    .foregroundColor(.lCream.opacity(0.85))
                 Text("\(appState.cycleDay)")
                     .font(LFont.display(56))
                     .foregroundColor(.lCream)
@@ -106,8 +106,9 @@ struct HomeScreen: View {
                 Text("of \(appState.cycleLength)")
                     .font(LFont.mono(10))
                     .tracking(1.5)
-                    .foregroundColor(.lCream.opacity(0.6))
+                    .foregroundColor(.lCream.opacity(0.75))
             }
+            .shadow(color: .black.opacity(0.45), radius: 8, x: 0, y: 0)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
@@ -174,7 +175,7 @@ struct HomeScreen: View {
         .padding(.horizontal, 22)
         .padding(.vertical, 20)
         .cardStyle()
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 28)
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.28)) {
                 phaseExpanded.toggle()
@@ -213,7 +214,7 @@ struct HomeScreen: View {
                 .transition(.opacity)
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 28)
         .animation(.easeInOut(duration: 0.18), value: appState.dailyLog.mood)
     }
 
@@ -280,7 +281,7 @@ struct HomeScreen: View {
             .padding(20)
             .cardStyle()
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 28)
     }
 
     private var hydrationCopy: String {
@@ -304,7 +305,7 @@ struct HomeScreen: View {
                 }
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 28)
     }
 
     // MARK: - Cycle history
@@ -360,7 +361,7 @@ struct HomeScreen: View {
                 .padding(.vertical, 22)
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 28)
     }
 
     // MARK: - Symptom log
@@ -404,12 +405,12 @@ struct HomeScreen: View {
                         .transition(.opacity)
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 28)
             .padding(.vertical, 18)
             .cardStyle()
         }
         .animation(.easeInOut(duration: 0.18), value: savedSymptom)
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 28)
     }
 
     // MARK: - Partner share
@@ -446,7 +447,7 @@ struct HomeScreen: View {
                 .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
                 .foregroundColor(Color.lRule)
         )
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 28)
     }
 
     // MARK: - Footer
