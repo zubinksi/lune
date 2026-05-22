@@ -119,7 +119,7 @@ struct ConnectScreen: View {
                         .padding(12)
                 }
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, 50)
             .padding(.bottom, 40)
         }
     }

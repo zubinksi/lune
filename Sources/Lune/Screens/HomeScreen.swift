@@ -22,6 +22,14 @@ struct HomeScreen: View {
         return fmt.string(from: Date()).uppercased()
     }
 
+    private var hebrewDateStr: String {
+        let fmt = DateFormatter()
+        fmt.calendar = Calendar(identifier: .hebrew)
+        fmt.locale = Locale(identifier: "en_US")
+        fmt.dateFormat = "d MMMM"
+        return fmt.string(from: Date())
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -58,8 +66,14 @@ struct HomeScreen: View {
 
     // MARK: - Top bar
     var topBar: some View {
-        HStack {
-            Eyebrow(dateStr)
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 2) {
+                Eyebrow(dateStr)
+                Text(hebrewDateStr)
+                    .font(LFont.mono(9))
+                    .tracking(0.5)
+                    .foregroundColor(.lInk3)
+            }
             Spacer()
             Button { showSettings = true } label: {
                 Image(systemName: "gearshape")
@@ -67,7 +81,7 @@ struct HomeScreen: View {
                     .foregroundColor(.lInk2)
             }
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 50)
         .padding(.top, 70)
     }
 
@@ -82,7 +96,7 @@ struct HomeScreen: View {
                 .foregroundColor(.lInk)
         }
         .tracking(-0.4)
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 50)
         .padding(.top, 20)
         .padding(.bottom, 8)
     }
@@ -133,7 +147,7 @@ struct HomeScreen: View {
 
             CycleStripView(day: appState.cycleDay, length: appState.cycleLength)
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 50)
         .padding(.bottom, 8)
     }
 
@@ -185,7 +199,7 @@ struct HomeScreen: View {
         .padding(.horizontal, 22)
         .padding(.vertical, 20)
         .cardStyle()
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 50)
         .onTapGesture {
             withAnimation(.easeInOut(duration: 0.28)) {
                 phaseExpanded.toggle()
@@ -224,7 +238,7 @@ struct HomeScreen: View {
                 .transition(.opacity)
             }
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 50)
         .animation(.easeInOut(duration: 0.18), value: appState.dailyLog.mood)
     }
 
@@ -264,7 +278,7 @@ struct HomeScreen: View {
                 }
             }
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 50)
     }
 
     // MARK: - Cycle history (saved recipes from this phase)
@@ -333,7 +347,7 @@ struct HomeScreen: View {
                 .padding(.vertical, 22)
             }
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 50)
         .sheet(item: $selectedSavedRecipe) { r in
             SavedRecipeSheet(recipe: r)
                 .environmentObject(appState)
@@ -379,7 +393,7 @@ struct HomeScreen: View {
                     .foregroundColor(Color.lRule)
             )
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 50)
     }
 
     // MARK: - Footer
@@ -694,7 +708,7 @@ struct SavedRecipeSheet: View {
 
                     Spacer().frame(height: 40)
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 50)
             }
 
             HStack {
@@ -713,7 +727,7 @@ struct SavedRecipeSheet: View {
                         .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
                 }
             }
-            .padding(.horizontal, 32)
+            .padding(.horizontal, 50)
             .padding(.top, 20)
             .background(
                 Color.lCream
