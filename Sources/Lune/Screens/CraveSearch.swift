@@ -154,7 +154,7 @@ struct CraveSearchSection: View {
             .padding(18)
             .cardStyle()
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 32)
         .animation(.easeInOut(duration: 0.2), value: loading)
         .animation(.easeInOut(duration: 0.2), value: recipes == nil)
     }

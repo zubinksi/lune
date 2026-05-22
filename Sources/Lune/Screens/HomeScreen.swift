@@ -39,8 +39,6 @@ struct HomeScreen: View {
                 divider(32)
                 cycleHistoryCard
                 divider(32)
-                symptomLogSection
-                divider(32)
                 partnerShare
                 divider(24)
                 footer
@@ -269,56 +267,9 @@ struct HomeScreen: View {
         .padding(.horizontal, 32)
     }
 
-    // MARK: - Symptom log
-    @State private var savedSymptom: String? = nil
-
-    var symptomLogSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "Symptom log", title: "How is today?")
-
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Cramping compared to yesterday?")
-                    .font(LFont.body(13.5))
-                    .foregroundColor(.lInk)
-                    .padding(.bottom, 14)
-
-                HStack(spacing: 8) {
-                    ForEach(["Worse", "Same", "Better"], id: \.self) { o in
-                        Button {
-                            savedSymptom = o
-                        } label: {
-                            Text(o)
-                                .font(LFont.body(13.5))
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .background(savedSymptom == o ? Color.lPlum : Color.clear)
-                                .foregroundColor(savedSymptom == o ? .lCream : .lInk)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(savedSymptom == o ? Color.lPlum : Color.lRule, lineWidth: 1))
-                        }
-                        .animation(.easeInOut(duration: 0.15), value: savedSymptom)
-                    }
-                }
-
-                if savedSymptom != nil {
-                    Text("Logged. Ona will keep adjusting based on what's helping.")
-                        .font(LFont.body(12))
-                        .italic()
-                        .foregroundColor(.lInk3)
-                        .padding(.top, 12)
-                        .transition(.opacity)
-                }
-            }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 18)
-            .cardStyle()
-        }
-        .animation(.easeInOut(duration: 0.18), value: savedSymptom)
-        .padding(.horizontal, 32)
-    }
-
     // MARK: - Cycle history (saved recipes from this phase)
+    @State private var selectedSavedRecipe: Recipe? = nil
+
     var cycleHistoryCard: some View {
         let phaseRecipes = appState.savedRecipes.filter { $0.phase == phase.name }
 
@@ -347,17 +298,25 @@ struct HomeScreen: View {
                     } else {
                         Eyebrow("Saved this phase", color: Color.lCream.opacity(0.55))
                         Spacer().frame(height: 10)
-                        VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 0) {
                             ForEach(phaseRecipes.prefix(3)) { r in
-                                HStack {
-                                    Text(r.name)
-                                        .font(LFont.displayRegular(17))
-                                        .foregroundColor(.lCream)
-                                        .lineSpacing(2)
-                                    Spacer()
-                                    Image(systemName: "bookmark.fill")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(Color.lCream.opacity(0.45))
+                                Button { selectedSavedRecipe = r } label: {
+                                    HStack {
+                                        Text(r.name)
+                                            .font(LFont.displayRegular(17))
+                                            .foregroundColor(.lCream)
+                                            .lineSpacing(2)
+                                            .multilineTextAlignment(.leading)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .font(.system(size: 11))
+                                            .foregroundColor(Color.lCream.opacity(0.45))
+                                    }
+                                    .padding(.vertical, 8)
+                                }
+                                .buttonStyle(.plain)
+                                if r.id != phaseRecipes.prefix(3).last?.id {
+                                    Divider().background(Color.lCream.opacity(0.15))
                                 }
                             }
                         }
@@ -375,6 +334,10 @@ struct HomeScreen: View {
             }
         }
         .padding(.horizontal, 32)
+        .sheet(item: $selectedSavedRecipe) { r in
+            SavedRecipeSheet(recipe: r)
+                .environmentObject(appState)
+        }
     }
 
     // MARK: - Partner share
@@ -646,6 +609,118 @@ struct NourishmentCard: View {
         }
         .padding(18)
         .cardStyle()
+    }
+}
+
+// MARK: - Saved recipe detail sheet
+struct SavedRecipeSheet: View {
+    let recipe: Recipe
+    @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Color.lCream.ignoresSafeArea()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Spacer().frame(height: 80)
+
+                    Eyebrow(recipe.time.uppercased())
+                    Spacer().frame(height: 8)
+                    Text(recipe.name)
+                        .font(LFont.display(28))
+                        .foregroundColor(.lInk)
+                        .lineSpacing(3)
+                    Spacer().frame(height: 8)
+                    BodyText(text: recipe.why, size: 14)
+                    Spacer().frame(height: 28)
+
+                    if !recipe.ingredients.isEmpty {
+                        Eyebrow("Ingredients")
+                        Spacer().frame(height: 12)
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(recipe.ingredients, id: \.self) { item in
+                                HStack(alignment: .top, spacing: 10) {
+                                    Circle()
+                                        .fill(Color.lTerracotta)
+                                        .frame(width: 4, height: 4)
+                                        .padding(.top, 7)
+                                    Text(item)
+                                        .font(LFont.body(14))
+                                        .foregroundColor(.lInk2)
+                                        .lineSpacing(2)
+                                }
+                            }
+                        }
+                        Spacer().frame(height: 28)
+                    }
+
+                    if !recipe.steps.isEmpty {
+                        Eyebrow("Prep")
+                        Spacer().frame(height: 12)
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(recipe.steps.indices, id: \.self) { i in
+                                HStack(alignment: .top, spacing: 12) {
+                                    Text(String(format: "%02d", i + 1))
+                                        .font(LFont.mono(10))
+                                        .tracking(1)
+                                        .foregroundColor(.lInk3)
+                                        .padding(.top, 3)
+                                    Text(recipe.steps[i])
+                                        .font(LFont.body(14))
+                                        .foregroundColor(.lInk2)
+                                        .lineSpacing(2)
+                                }
+                            }
+                        }
+                        Spacer().frame(height: 28)
+                    }
+
+                    Button {
+                        appState.savedRecipes.removeAll { $0.name == recipe.name }
+                        dismiss()
+                    } label: {
+                        Text("Remove bookmark")
+                            .font(LFont.body(13))
+                            .foregroundColor(.lRed.opacity(0.7))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .background(Color.lPaper)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.lRed.opacity(0.2), lineWidth: 1))
+                    }
+
+                    Spacer().frame(height: 40)
+                }
+                .padding(.horizontal, 32)
+            }
+
+            HStack {
+                Text(recipe.phase.isEmpty ? "Saved recipe" : recipe.phase)
+                    .font(LFont.display(20))
+                    .foregroundColor(.lInk)
+                Spacer()
+                Button { dismiss() } label: {
+                    Text("Done")
+                        .font(LFont.body(15, weight: .medium))
+                        .foregroundColor(.lPlum)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.lCream)
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+                }
+            }
+            .padding(.horizontal, 32)
+            .padding(.top, 20)
+            .background(
+                Color.lCream
+                    .ignoresSafeArea(edges: .top)
+                    .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
+            )
+        }
     }
 }
 
