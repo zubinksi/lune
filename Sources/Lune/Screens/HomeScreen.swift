@@ -85,10 +85,19 @@ struct HomeScreen: View {
         .padding(.top, 70)
     }
 
+    private var timeOfDayGreeting: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 0..<12: return "Good morning,"
+        case 12..<17: return "Good afternoon,"
+        default: return "Good evening,"
+        }
+    }
+
     // MARK: - Greeting
     var greeting: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Good morning,")
+            Text(timeOfDayGreeting)
                 .font(LFont.display(32))
                 .foregroundColor(.lInk)
             Text("\(appState.profile.name).")
