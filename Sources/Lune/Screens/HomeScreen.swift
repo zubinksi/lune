@@ -25,11 +25,12 @@ struct HomeScreen: View {
             VStack(alignment: .leading, spacing: 0) {
                 greeting
                 phaseHeaderCard
-                if hasAPIKey {
-                    CraveSearchSection()
-                }
                 divider(32)
                 moodCheckIn
+                if hasAPIKey {
+                    divider(32)
+                    CraveSearchSection()
+                }
                 divider(32)
                 nourishmentSection
                 divider(32)

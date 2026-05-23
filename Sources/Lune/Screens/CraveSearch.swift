@@ -33,26 +33,33 @@ struct CraveSearchSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
 
+            // Section header
             Eyebrow("Craving something?")
-            Spacer().frame(height: 10)
+            Spacer().frame(height: 6)
+            Text("Tell Ona")
+                .font(LFont.display(28))
+                .foregroundColor(.lInk)
+            Spacer().frame(height: 16)
 
-            // Persistent search bar
-            HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 13))
-                    .foregroundColor(.lInk3)
+            // Card
+            VStack(alignment: .leading, spacing: 0) {
 
-                TextField("Craving something? Tell Ona…", text: $query)
-                    .font(LFont.body(14))
-                    .foregroundColor(.lInk)
-                    .focused($isFocused)
-                    .onSubmit { Task { await generate() } }
+                // Search bar row
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 13))
+                        .foregroundColor(.lInk3)
 
-                if isExpanded {
+                    TextField("an ingredient, a craving…", text: $query)
+                        .font(LFont.body(14))
+                        .foregroundColor(.lInk)
+                        .focused($isFocused)
+                        .onSubmit { Task { await generate() } }
+
                     Button {
                         Task { await generate() }
                     } label: {
-                        Text(loading ? "..." : "Suggest")
+                        Text(loading ? "…" : "Suggest")
                             .font(LFont.body(13, weight: .medium))
                             .foregroundColor(canSubmit ? .lCream : .lInk3)
                             .padding(.horizontal, 14)
@@ -61,110 +68,103 @@ struct CraveSearchSection: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     }
                     .disabled(!canSubmit)
-                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
                 }
-            }
-            .padding(.leading, 14)
-            .padding(.trailing, isExpanded ? 4 : 14)
-            .padding(.vertical, isExpanded ? 4 : 10)
-            .background(Color.lPaper)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(isFocused ? Color.lPlum.opacity(0.4) : Color.lRule, lineWidth: 1))
-            .animation(.easeInOut(duration: 0.18), value: isExpanded)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 4)
+                .background(Color.lCream2.opacity(0.6))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(isFocused ? Color.lPlum.opacity(0.4) : Color.lRule, lineWidth: 1))
 
-            // Expanded content
-            if isExpanded {
-                VStack(alignment: .leading, spacing: 0) {
-
-                    // Idea chips + footnote
-                    if recipes == nil && !loading {
-                        Spacer().frame(height: 14)
-                        FlowLayout(spacing: 6) {
-                            ForEach(ideas, id: \.self) { idea in
-                                Button { query = idea } label: {
-                                    Text(idea)
-                                        .font(LFont.body(12))
-                                        .foregroundColor(.lInk2)
-                                        .padding(.horizontal, 11)
-                                        .padding(.vertical, 5)
-                                        .background(Color.clear)
-                                        .clipShape(Capsule())
-                                        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
-                                }
+                // Idea chips + footnote (always visible unless showing results or loading)
+                if recipes == nil && !loading {
+                    Spacer().frame(height: 14)
+                    FlowLayout(spacing: 6) {
+                        ForEach(ideas, id: \.self) { idea in
+                            Button { query = idea } label: {
+                                Text(idea)
+                                    .font(LFont.body(12))
+                                    .foregroundColor(.lInk2)
+                                    .padding(.horizontal, 11)
+                                    .padding(.vertical, 5)
+                                    .background(Color.clear)
+                                    .clipShape(Capsule())
+                                    .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
                             }
                         }
-                        Text("Tuned to your \(phase.name.lowercased()) phase\(appState.dailyLog.mood.map { ", feeling \($0.lowercased())" } ?? "").")
-                            .font(LFont.body(11.5))
-                            .foregroundColor(.lInk3)
-                            .padding(.top, 8)
                     }
+                    Spacer().frame(height: 10)
+                    Text("Recipes will be tuned to your \(phase.name.lowercased()) phase\(appState.dailyLog.mood.map { " and feeling \($0.lowercased())" } ?? "").")
+                        .font(LFont.body(12))
+                        .foregroundColor(.lInk3)
+                }
 
-                    // Loading
-                    if loading {
-                        HStack(spacing: 10) {
-                            SpinnerView()
-                            Text("Cooking up ideas with \(submittedFor)…")
-                                .font(LFont.body(13))
-                                .italic()
-                                .foregroundColor(.lInk2)
-                        }
+                // Loading
+                if loading {
+                    HStack(spacing: 10) {
+                        SpinnerView()
+                        Text("Cooking up ideas with \(submittedFor)…")
+                            .font(LFont.body(13))
+                            .italic()
+                            .foregroundColor(.lInk2)
+                    }
+                    .padding(.top, 14)
+                    .transition(.opacity)
+                }
+
+                // Error
+                if let err = error {
+                    Text(err)
+                        .font(LFont.body(12.5))
+                        .foregroundColor(.lRed)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Color(hex: "9a4a3e").opacity(0.08))
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                         .padding(.top, 14)
                         .transition(.opacity)
-                    }
-
-                    // Error
-                    if let err = error {
-                        Text(err)
-                            .font(LFont.body(12.5))
-                            .foregroundColor(.lRed)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(Color(hex: "9a4a3e").opacity(0.08))
-                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            .padding(.top, 14)
-                            .transition(.opacity)
-                    }
-
-                    // Results
-                    if let r = recipes {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Eyebrow("For \"\(submittedFor)\" · \(phase.name.lowercased())", color: .lSageDeep)
-                                .padding(.top, 14)
-                            ForEach(r.indices, id: \.self) { i in
-                                GeneratedRecipeCard(
-                                    recipe: r[i],
-                                    currentPhase: phase.name,
-                                    open: expandedIndex == i
-                                ) {
-                                    withAnimation(.easeInOut(duration: 0.22)) {
-                                        expandedIndex = expandedIndex == i ? nil : i
-                                    }
-                                }
-                            }
-                            Button {
-                                withAnimation {
-                                    recipes = nil
-                                    query = ""
-                                    submittedFor = ""
-                                    isFocused = false
-                                }
-                            } label: {
-                                Text("← try another")
-                                    .font(LFont.body(12.5))
-                                    .foregroundColor(.lInk3)
-                            }
-                            .padding(.top, 2)
-                        }
-                        .transition(.opacity)
-                    }
                 }
-                .transition(.opacity.combined(with: .move(edge: .top)))
+
+                // Results
+                if let r = recipes {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow("For \"\(submittedFor)\" · \(phase.name.lowercased())", color: .lSageDeep)
+                            .padding(.top, 14)
+                        ForEach(r.indices, id: \.self) { i in
+                            GeneratedRecipeCard(
+                                recipe: r[i],
+                                currentPhase: phase.name,
+                                open: expandedIndex == i
+                            ) {
+                                withAnimation(.easeInOut(duration: 0.22)) {
+                                    expandedIndex = expandedIndex == i ? nil : i
+                                }
+                            }
+                        }
+                        Button {
+                            withAnimation {
+                                recipes = nil
+                                query = ""
+                                submittedFor = ""
+                                isFocused = false
+                            }
+                        } label: {
+                            Text("← try another")
+                                .font(LFont.body(12.5))
+                                .foregroundColor(.lInk3)
+                        }
+                        .padding(.top, 2)
+                    }
+                    .transition(.opacity)
+                }
             }
+            .padding(16)
+            .background(Color.lPaper)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.lRule, lineWidth: 1))
         }
         .padding(.horizontal, 24)
-        .padding(.top, 12)
-        .animation(.easeInOut(duration: 0.2), value: isExpanded)
         .animation(.easeInOut(duration: 0.2), value: loading)
         .animation(.easeInOut(duration: 0.2), value: recipes == nil)
     }
