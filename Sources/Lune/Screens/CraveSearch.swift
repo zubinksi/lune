@@ -33,6 +33,9 @@ struct CraveSearchSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
 
+            Eyebrow("Craving something?")
+            Spacer().frame(height: 10)
+
             // Persistent search bar
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
