@@ -281,10 +281,9 @@ struct SignupCookingStyleScreen: View {
     }
 }
 
-// MARK: - Notes step
+// MARK: - Name step
 struct SignupNotesScreen: View {
     @EnvironmentObject var appState: AppState
-    @FocusState private var focused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -296,22 +295,19 @@ struct SignupNotesScreen: View {
                     Spacer().frame(height: 12)
 
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("Anything")
+                        Text("What should")
                             .font(LFont.display(36))
-                        Text("else?").font(LFont.display(36, italic: true))
+                        Text("Ona call you?").font(LFont.display(36, italic: true))
                     }
                     .tracking(-0.4)
                     .foregroundColor(.lInk)
 
                     Spacer().frame(height: 12)
 
-                    BodyText(text: "Allergies, cravings you can't quit, things you'd love more of. Lune will keep these in mind.")
+                    BodyText(text: "Ona will use your name to make recommendations feel personal.")
 
-                    Spacer().frame(height: 22)
+                    Spacer().frame(height: 28)
 
-                    // Name field
-                    Eyebrow("Your name")
-                    Spacer().frame(height: 8)
                     TextField("e.g. Genesha", text: $appState.profile.name)
                         .font(LFont.body(15))
                         .foregroundColor(.lInk)
@@ -320,30 +316,6 @@ struct SignupNotesScreen: View {
                         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.lRule, lineWidth: 1))
 
-                    Spacer().frame(height: 18)
-
-                    ZStack(alignment: .topLeading) {
-                        if appState.profile.notes.isEmpty {
-                            Text("e.g. I really miss soft-boiled eggs in the morning…")
-                                .font(LFont.body(15))
-                                .foregroundColor(.lInk3)
-                                .italic()
-                                .padding(18)
-                                .allowsHitTesting(false)
-                        }
-
-                        TextEditor(text: $appState.profile.notes)
-                            .font(LFont.body(15))
-                            .foregroundColor(.lInk)
-                            .scrollContentBackground(.hidden)
-                            .padding(18)
-                            .frame(minHeight: 160)
-                            .focused($focused)
-                    }
-                    .background(Color.lPaper)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.lRule, lineWidth: 1))
-
                     Spacer().frame(height: 40)
                 }
                 .padding(.horizontal, 24)
@@ -351,7 +323,7 @@ struct SignupNotesScreen: View {
             }
 
             VStack {
-                PillButton(label: "Begin") {
+                PillButton(label: "Continue") {
                     appState.advance()
                 }
             }

@@ -3,7 +3,6 @@ import SwiftUI
 struct SettingsScreen: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
-    @FocusState private var notesFocused: Bool
     @State private var refreshed = false
     @State private var apiKey: String = UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? ""
     @State private var apiKeyVisible = false
@@ -62,36 +61,6 @@ struct SettingsScreen: View {
                             }
                         }
                     }
-
-                    rule(40)
-
-                    // MARK: Notes
-                    sectionLabel("Anything else")
-                    Spacer().frame(height: 6)
-                    BodyText(text: "Allergies, cravings, things you'd love more of.", size: 13)
-                    Spacer().frame(height: 16)
-
-                    ZStack(alignment: .topLeading) {
-                        if appState.profile.notes.isEmpty {
-                            Text("e.g. I can't do anything too heavy in the morning…")
-                                .font(LFont.body(15))
-                                .foregroundColor(.lInk3)
-                                .italic()
-                                .padding(18)
-                                .allowsHitTesting(false)
-                        }
-                        TextEditor(text: $appState.profile.notes)
-                            .font(LFont.body(15))
-                            .foregroundColor(.lInk)
-                            .scrollContentBackground(.hidden)
-                            .padding(18)
-                            .frame(minHeight: 140)
-                            .focused($notesFocused)
-                    }
-                    .background(Color.lPaper)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color.lRule, lineWidth: 1))
 
                     rule(40)
 
@@ -378,7 +347,6 @@ struct SettingsScreen: View {
                 }
                 Spacer()
                 Button {
-                    notesFocused = false
                     dismiss()
                 } label: {
                     Text("Done")

@@ -193,7 +193,6 @@ struct CraveSearchSection: View {
             : appState.profile.cookingStyles.joined(separator: ", ")
         let cookingStyleNotes = appState.profile.cookingStyleNotes.trimmingCharacters(in: .whitespacesAndNewlines)
         let mood = appState.dailyLog.mood ?? "not logged"
-        let notes = appState.profile.notes.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let prompt = """
         You are a warm, knowledgeable nutritionist who designs recipes around the menstrual cycle.
@@ -204,7 +203,6 @@ struct CraveSearchSection: View {
         - Symptoms she wants to address: \(symptoms)
         - Dietary preferences: \(diet)
         - Cooking style & flavour profile: \(cookingStyles)\(cookingStyleNotes.isEmpty ? "" : ". Additional: \(cookingStyleNotes)")
-        - Personal notes: \(notes.isEmpty ? "none" : notes)
         - She is craving / wants to use: \(q)
 
         Suggest TWO simple, real recipes that center "\(q)" and are well-suited to her \(phase.name) phase and how she's feeling. Recipes should be doable in 30 minutes or less.
