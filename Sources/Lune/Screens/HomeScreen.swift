@@ -25,15 +25,17 @@ struct HomeScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 greeting
-                phaseHeaderCard
+                moonHero
+                phaseNameAndStrip
+                phaseCard
                 divider(32)
                 moodCheckIn
+                divider(32)
+                nourishmentSection
                 if hasAPIKey {
                     divider(32)
                     CraveSearchSection()
                 }
-                divider(32)
-                nourishmentSection
                 divider(32)
                 cycleHistoryCard
                 divider(32)
@@ -96,50 +98,56 @@ struct HomeScreen: View {
         .padding(.bottom, 8)
     }
 
-    // MARK: - Phase header card (moon + phase + day + explainer + foods)
-    var phaseHeaderCard: some View {
+    // MARK: - Large moon
+    var moonHero: some View {
+        ZStack {
+            MoonView(
+                phase: phase.phase,
+                size: 190,
+                litColor: .lInk,
+                darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
+                showCraters: true,
+                showGlow: false
+            )
+            VStack(spacing: 2) {
+                Text("DAY")
+                    .font(LFont.mono(11))
+                    .tracking(2)
+                    .foregroundColor(.lInk3)
+                Text("\(appState.cycleDay)")
+                    .font(LFont.display(64))
+                    .foregroundColor(.lInk)
+                Text("of \(appState.cycleLength)")
+                    .font(LFont.mono(12))
+                    .tracking(1)
+                    .foregroundColor(.lInk3)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Phase name + cycle strip
+    var phaseNameAndStrip: some View {
+        VStack(spacing: 14) {
+            Text(phase.name)
+                .font(LFont.display(32))
+                .foregroundColor(.lInk)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            CycleStripView(day: appState.cycleDay, length: appState.cycleLength)
+                .padding(.horizontal, 24)
+        }
+        .padding(.bottom, 28)
+    }
+
+    // MARK: - Phase explainer card
+    var phaseCard: some View {
         let explainer = phaseExplainer[phase.name] ?? ""
         let foods = phaseFoods[phase.name] ?? []
 
         return VStack(alignment: .leading, spacing: 0) {
-            // Moon + phase name + day counter
-            HStack(alignment: .center, spacing: 14) {
-                ZStack {
-                    MoonView(
-                        phase: phase.phase,
-                        size: 48,
-                        litColor: .lInk,
-                        darkColor: .lCream2,
-                        showCraters: true,
-                        showGlow: false
-                    )
-                    Circle()
-                        .strokeBorder(Color.lRule, lineWidth: 1)
-                        .frame(width: 48, height: 48)
-                }
-
-                Text(phase.name)
-                    .font(LFont.display(24, italic: true))
-                    .foregroundColor(.lInk)
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 1) {
-                    Text("DAY \(appState.cycleDay)")
-                        .font(LFont.mono(11))
-                        .tracking(1)
-                        .foregroundColor(.lInk)
-                    Text("of \(appState.cycleLength)")
-                        .font(LFont.mono(9))
-                        .tracking(0.8)
-                        .foregroundColor(.lInk3)
-                }
-            }
-
-            Spacer().frame(height: 16)
-            Divider().background(Color.lRule)
-            Spacer().frame(height: 14)
-
             Eyebrow("Why this phase matters", color: phaseColor)
             Spacer().frame(height: 8)
 
