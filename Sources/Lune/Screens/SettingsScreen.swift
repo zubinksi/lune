@@ -175,54 +175,140 @@ struct SettingsScreen: View {
 
                     rule(40)
 
-                    // MARK: HealthKit
-                    sectionLabel("Apple Health")
-                    Spacer().frame(height: 10)
+                    // MARK: Cycle tracking source
+                    sectionLabel("Cycle tracking")
+                    Spacer().frame(height: 6)
 
-                    HStack(spacing: 14) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .fill(LinearGradient(
-                                    colors: [Color(hex: "ff5e6e"), Color(hex: "ff2d55")],
-                                    startPoint: .topLeading, endPoint: .bottomTrailing))
-                                .frame(width: 36, height: 36)
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 15))
-                                .foregroundColor(.white)
-                        }
+                    if appState.profile.healthKitConnected {
+                        // HealthKit connected state
+                        BodyText(text: "Your cycle data comes from Apple Health.", size: 13)
+                        Spacer().frame(height: 16)
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(appState.profile.healthKitConnected ? "Connected" : "Not connected")
-                                .font(LFont.body(14, weight: .medium))
-                                .foregroundColor(.lInk)
-                            Text("Cycle tracking · read only")
-                                .font(LFont.body(12))
-                                .foregroundColor(.lInk3)
-                        }
+                        HStack(spacing: 14) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(LinearGradient(
+                                        colors: [Color(hex: "ff5e6e"), Color(hex: "ff2d55")],
+                                        startPoint: .topLeading, endPoint: .bottomTrailing))
+                                    .frame(width: 36, height: 36)
+                                Image(systemName: "heart.fill")
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.white)
+                            }
 
-                        Spacer()
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Apple Health")
+                                    .font(LFont.body(14, weight: .medium))
+                                    .foregroundColor(.lInk)
+                                Text("Cycle tracking · read only")
+                                    .font(LFont.body(12))
+                                    .foregroundColor(.lInk3)
+                            }
 
-                        if appState.profile.healthKitConnected {
+                            Spacer()
+
                             Text("ACTIVE")
                                 .font(LFont.mono(9.5))
                                 .tracking(1.2)
                                 .foregroundColor(.lSageDeep)
-                        } else {
+                        }
+                        .padding(16)
+                        .cardStyle()
+                    } else {
+                        // Manual entry
+                        BodyText(text: "Enter your cycle details manually. Ona uses these to estimate where you are in your cycle.", size: 13)
+                        Spacer().frame(height: 16)
+
+                        Eyebrow("Average cycle length")
+                        Spacer().frame(height: 8)
+
+                        HStack {
                             Button {
-                                Task { await appState.connectHealthKit() }
+                                if appState.profile.manualCycleLength > 21 {
+                                    appState.profile.manualCycleLength -= 1
+                                    appState.computeCycleDayFromManual()
+                                }
                             } label: {
-                                Text("Connect")
-                                    .font(LFont.body(13, weight: .medium))
-                                    .foregroundColor(.lCream)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 7)
-                                    .background(Color.lPlum)
-                                    .clipShape(Capsule())
+                                Image(systemName: "minus")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.lInk)
+                                    .frame(width: 34, height: 34)
+                                    .background(Color.lPaper)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.lRule, lineWidth: 1))
                             }
+
+                            Text("\(appState.profile.manualCycleLength) days")
+                                .font(LFont.display(20))
+                                .foregroundColor(.lInk)
+                                .frame(minWidth: 80, alignment: .center)
+
+                            Button {
+                                if appState.profile.manualCycleLength < 40 {
+                                    appState.profile.manualCycleLength += 1
+                                    appState.computeCycleDayFromManual()
+                                }
+                            } label: {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.lInk)
+                                    .frame(width: 34, height: 34)
+                                    .background(Color.lPaper)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.lRule, lineWidth: 1))
+                            }
+
+                            Spacer()
+                        }
+                        .padding(16)
+                        .background(Color.lPaper)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.lRule, lineWidth: 1))
+
+                        Spacer().frame(height: 14)
+
+                        Eyebrow("Reference menstruation date")
+                        Spacer().frame(height: 8)
+                        BodyText(text: "The first day of a recent period. Ona uses this as a reference point to calculate your current cycle day.", size: 12)
+                        Spacer().frame(height: 10)
+
+                        DatePicker(
+                            "",
+                            selection: Binding(
+                                get: { appState.profile.referencePeriodDate ?? Date() },
+                                set: { appState.profile.referencePeriodDate = $0; appState.computeCycleDayFromManual() }
+                            ),
+                            in: ...Date(),
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.compact)
+                        .labelsHidden()
+                        .tint(Color.lPlum)
+                        .padding(16)
+                        .background(Color.lPaper)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.lRule, lineWidth: 1))
+
+                        Spacer().frame(height: 14)
+
+                        Button {
+                            Task { await appState.connectHealthKit() }
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "heart.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(Color(hex: "ff2d55"))
+                                Text("Switch to Apple Health")
+                                    .font(LFont.body(13))
+                                    .foregroundColor(.lInk2)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .background(Color.lPaper)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.lRule, lineWidth: 1))
                         }
                     }
-                    .padding(16)
-                    .cardStyle()
 
                     Spacer().frame(height: 60)
                 }

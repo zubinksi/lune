@@ -48,6 +48,25 @@ class AppState: ObservableObject {
 
     // MARK: - Persistence
 
+    func computeCycleDayFromManual() {
+        guard !profile.healthKitConnected, let refDate = profile.referencePeriodDate else { return }
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let ref = cal.startOfDay(for: refDate)
+        let days = cal.dateComponents([.day], from: ref, to: today).day ?? 0
+        guard days >= 0 else { return }
+        let length = max(profile.manualCycleLength, 1)
+        cycleLength = length
+        cycleDay = (days % length) + 1
+    }
+
+    func setManualCycle(referenceDate: Date, length: Int) {
+        profile.referencePeriodDate = referenceDate
+        profile.manualCycleLength = length
+        computeCycleDayFromManual()
+        advance()
+    }
+
     private func load() {
         if let data = defaults.data(forKey: "profile"),
            let p = try? decoder.decode(Profile.self, from: data) {
@@ -81,10 +100,14 @@ class AppState: ObservableObject {
             nourishmentDate = today
         }
 
-        let d = defaults.integer(forKey: "cycleDay")
-        cycleDay = d > 0 ? d : 1
-        let l = defaults.integer(forKey: "cycleLength")
-        cycleLength = l > 0 ? l : 28
+        if profile.referencePeriodDate != nil && !profile.healthKitConnected {
+            computeCycleDayFromManual()
+        } else {
+            let d = defaults.integer(forKey: "cycleDay")
+            cycleDay = d > 0 ? d : 1
+            let l = defaults.integer(forKey: "cycleLength")
+            cycleLength = l > 0 ? l : 28
+        }
     }
 
     private func save() {

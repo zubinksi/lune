@@ -7,6 +7,8 @@ struct Profile: Codable {
     var diet: [String] = []
     var notes: String = ""
     var healthKitConnected: Bool = false
+    var manualCycleLength: Int = 28
+    var referencePeriodDate: Date? = nil
 }
 
 // MARK: - Cycle
