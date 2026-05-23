@@ -214,6 +214,21 @@ struct SettingsScreen: View {
                         }
                         .padding(16)
                         .cardStyle()
+
+                        Spacer().frame(height: 14)
+
+                        Button {
+                            appState.profile.healthKitConnected = false
+                        } label: {
+                            Text("Switch to manual entry")
+                                .font(LFont.body(13))
+                                .foregroundColor(.lInk2)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(Color.lPaper)
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.lRule, lineWidth: 1))
+                        }
                     } else {
                         // Manual entry
                         BodyText(text: "Enter your cycle details manually. Ona uses these to estimate where you are in your cycle.", size: 13)
