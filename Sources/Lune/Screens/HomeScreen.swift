@@ -100,29 +100,14 @@ struct HomeScreen: View {
 
     // MARK: - Large moon
     var moonHero: some View {
-        ZStack {
-            MoonView(
-                phase: phase.phase,
-                size: 190,
-                litColor: .lInk,
-                darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
-                showCraters: true,
-                showGlow: false
-            )
-            VStack(spacing: 2) {
-                Text("DAY")
-                    .font(LFont.mono(11))
-                    .tracking(2)
-                    .foregroundColor(.lInk3)
-                Text("\(appState.cycleDay)")
-                    .font(LFont.display(64))
-                    .foregroundColor(.lInk)
-                Text("of \(appState.cycleLength)")
-                    .font(LFont.mono(12))
-                    .tracking(1)
-                    .foregroundColor(.lInk3)
-            }
-        }
+        MoonView(
+            phase: phase.phase,
+            size: 190,
+            litColor: .lInk,
+            darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
+            showCraters: true,
+            showGlow: false
+        )
         .frame(maxWidth: .infinity)
         .padding(.top, 12)
         .padding(.bottom, 8)
@@ -130,11 +115,19 @@ struct HomeScreen: View {
 
     // MARK: - Phase name + cycle strip
     var phaseNameAndStrip: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 6) {
             Text(phase.name)
                 .font(LFont.display(32))
                 .foregroundColor(.lInk)
                 .frame(maxWidth: .infinity, alignment: .center)
+
+            Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
+                .font(LFont.mono(12))
+                .tracking(0.8)
+                .foregroundColor(.lInk3)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            Spacer().frame(height: 10)
 
             CycleStripView(day: appState.cycleDay, length: appState.cycleLength)
         }
