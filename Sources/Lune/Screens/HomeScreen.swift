@@ -48,7 +48,11 @@ struct HomeScreen: View {
         .background(Color.lCream.ignoresSafeArea())
         .onAppear {
             refreshIfNeeded()
-            Task { await appState.loadDailyNourishment() }
+            // Only generate if mood is already set but nourishment isn't cached yet
+            // (handles reopening the app after checking in earlier today)
+            if appState.dailyLog.mood != nil && appState.dailyNourishment.isEmpty {
+                Task { await appState.loadDailyNourishment() }
+            }
         }
         .sheet(isPresented: $showSettings) {
             SettingsScreen()
@@ -180,10 +184,19 @@ struct HomeScreen: View {
         VStack(alignment: .leading, spacing: 0) {
             SectionHeader(eyebrow: "Today's check-in", title: "How are you feeling?")
 
+            if appState.dailyLog.mood == nil {
+                BodyText(text: "Tell Ona how you feel and she'll shape today's meals around it.", size: 13)
+                    .padding(.bottom, 14)
+            }
+
             HStack(spacing: 8) {
                 ForEach(["Steady", "Tender", "Tired", "Bright", "Bloated"], id: \.self) { m in
                     MoodOptionButton(label: m, selected: appState.dailyLog.mood == m) {
+                        let wasNil = appState.dailyLog.mood == nil
                         appState.dailyLog.mood = appState.dailyLog.mood == m ? nil : m
+                        if wasNil, appState.dailyLog.mood != nil {
+                            Task { await appState.loadDailyNourishment() }
+                        }
                     }
                 }
             }
@@ -222,35 +235,33 @@ struct HomeScreen: View {
     }
 
     // MARK: - Nourishment
-    @State private var nourishmentRefreshed = false
-
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "Today", title: "Nourishment",
-                          actionLabel: nourishmentRefreshed ? "refreshing" : "refresh") {
-                appState.clearNourishmentCache()
-                nourishmentRefreshed = true
-                Task {
-                    await appState.loadDailyNourishment()
-                    nourishmentRefreshed = false
-                }
-            }
+            SectionHeader(eyebrow: "Today", title: "Nourishment")
 
             if appState.nourishmentLoading && appState.dailyNourishment.isEmpty {
-                // First-load skeleton
                 HStack(spacing: 12) {
                     SpinnerView()
-                    Text("Preparing today's nourishment…")
+                    Text("Preparing today's meals…")
                         .font(LFont.body(14))
+                        .italic()
                         .foregroundColor(.lInk2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(20)
                 .cardStyle()
+            } else if appState.dailyNourishment.isEmpty {
+                // Waiting for mood check-in
+                Text("Check in above and Ona will build your meals for the day.")
+                    .font(LFont.body(14))
+                    .foregroundColor(.lInk3)
+                    .lineSpacing(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .cardStyle()
             } else {
-                let cards = appState.dailyNourishment.isEmpty ? recipes : appState.dailyNourishment
                 VStack(spacing: 10) {
-                    ForEach(cards) { recipe in
+                    ForEach(appState.dailyNourishment) { recipe in
                         NourishmentCard(recipe: recipe, currentPhase: phase.name)
                     }
                 }
