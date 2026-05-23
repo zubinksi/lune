@@ -15,6 +15,7 @@ struct HomeScreen: View {
     }
 
     @State private var showSettings = false
+    @State private var nourishmentRefreshed = false
 
     private var hasAPIKey: Bool {
         !(UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? "").isEmpty
@@ -46,11 +47,12 @@ struct HomeScreen: View {
         .background(Color.lCream.ignoresSafeArea())
         .onAppear {
             refreshIfNeeded()
-            // Only generate if mood is already set but nourishment isn't cached yet
-            // (handles reopening the app after checking in earlier today)
             if appState.dailyLog.mood != nil && appState.dailyNourishment.isEmpty {
                 Task { await appState.loadDailyNourishment() }
             }
+        }
+        .onChange(of: appState.nourishmentLoading) { _, isLoading in
+            if !isLoading { nourishmentRefreshed = false }
         }
         .sheet(isPresented: $showSettings) {
             SettingsScreen()
@@ -223,7 +225,27 @@ struct HomeScreen: View {
     // MARK: - Nourishment
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "Today", title: "Nourishment")
+            HStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Eyebrow("Today")
+                    DisplayLabel(text: "Nourishment", size: 22, italic: true)
+                }
+                Spacer()
+                Button {
+                    appState.clearNourishmentCache()
+                    nourishmentRefreshed = true
+                    if appState.dailyLog.mood != nil {
+                        Task { await appState.loadDailyNourishment() }
+                    }
+                } label: {
+                    Image(systemName: nourishmentRefreshed ? "checkmark" : "arrow.clockwise")
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundColor(nourishmentRefreshed ? .lSageDeep : .lInk3)
+                }
+                .disabled(appState.nourishmentLoading)
+                .animation(.easeInOut(duration: 0.2), value: nourishmentRefreshed)
+            }
+            .padding(.bottom, 14)
 
             if appState.nourishmentLoading && appState.dailyNourishment.isEmpty {
                 HStack(spacing: 12) {
