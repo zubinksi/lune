@@ -137,7 +137,6 @@ struct HomeScreen: View {
                 .frame(maxWidth: .infinity, alignment: .center)
 
             CycleStripView(day: appState.cycleDay, length: appState.cycleLength)
-                .padding(.horizontal, 24)
         }
         .padding(.bottom, 28)
     }
@@ -743,24 +742,35 @@ struct CycleStripView: View {
     let length: Int
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(1...length, id: \.self) { d in
-                let info = cyclePhase(day: d, length: length)
-                let isToday = d == day
-                VStack(spacing: 6) {
-                    MoonIcon(
-                        phase: info.phase,
-                        size: isToday ? 14 : 10,
-                        litColor: .lInk,
-                        darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.12)
-                    )
-                    if isToday {
-                        Circle()
-                            .fill(Color.lTerracotta)
-                            .frame(width: 4, height: 4)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(1...length, id: \.self) { d in
+                        let info = cyclePhase(day: d, length: length)
+                        let isToday = d == day
+                        VStack(spacing: 6) {
+                            MoonIcon(
+                                phase: info.phase,
+                                size: isToday ? 14 : 10,
+                                litColor: .lInk,
+                                darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.12)
+                            )
+                            if isToday {
+                                Circle()
+                                    .fill(Color.lTerracotta)
+                                    .frame(width: 4, height: 4)
+                            } else {
+                                Color.clear.frame(width: 4, height: 4)
+                            }
+                        }
+                        .id(d)
                     }
                 }
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 4)
+            }
+            .onAppear {
+                proxy.scrollTo(day, anchor: .center)
             }
         }
     }
