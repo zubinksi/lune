@@ -22,7 +22,7 @@ struct SignupHeaderView: View {
 
             Spacer()
 
-            ProgressDots(step: step, total: 4)
+            ProgressDots(step: step, total: 5)
 
             Spacer()
 
@@ -54,6 +54,11 @@ struct ProgressDots: View {
 // MARK: - Symptom step
 let kSymptoms = ["Bloating", "Mood swings", "Cramping", "Cravings", "Sleeplessness", "Fatigue"]
 let kDiets = ["Vegetarian", "Vegan", "Pescatarian", "No dairy", "No nuts", "More fruit", "More veg", "More protein"]
+let kCookingStyles = [
+    "Bold & spiced", "Bright & acidic", "Herb-forward", "Smoky & charred", "Warm & aromatic",
+    "Lots of vegetables", "Legume & grain heavy", "Seafood-forward",
+    "Slow-cooked & brothy", "Quick & high-heat", "One-pan, low-effort"
+]
 
 struct SignupSymptomsScreen: View {
     @EnvironmentObject var appState: AppState
@@ -64,7 +69,7 @@ struct SignupSymptomsScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Eyebrow("Step 1 of 4")
+                    Eyebrow("Step 1 of 5")
 
                     Spacer().frame(height: 12)
 
@@ -131,7 +136,7 @@ struct SignupDietScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Eyebrow("Step 2 of 4")
+                    Eyebrow("Step 2 of 5")
                     Spacer().frame(height: 12)
 
                     VStack(alignment: .leading, spacing: 0) {
@@ -186,10 +191,10 @@ struct SignupDietScreen: View {
     }
 }
 
-// MARK: - Notes step
-struct SignupNotesScreen: View {
+// MARK: - Cooking style step
+struct SignupCookingStyleScreen: View {
     @EnvironmentObject var appState: AppState
-    @FocusState private var focused: Bool
+    @FocusState private var notesFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -197,7 +202,97 @@ struct SignupNotesScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Eyebrow("Step 3 of 4")
+                    Eyebrow("Step 3 of 5")
+                    Spacer().frame(height: 12)
+
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("How do you")
+                            .font(LFont.display(36))
+                        Text("like to cook?").font(LFont.display(36, italic: true))
+                    }
+                    .tracking(-0.4)
+                    .foregroundColor(.lInk)
+
+                    Spacer().frame(height: 12)
+
+                    BodyText(text: "Pick what resonates. These shape the flavour and style of every recipe Ona suggests.")
+
+                    Spacer().frame(height: 28)
+
+                    FlowLayout(spacing: 8) {
+                        ForEach(kCookingStyles, id: \.self) { s in
+                            ChipButton(
+                                label: s,
+                                selected: appState.profile.cookingStyles.contains(s)
+                            ) {
+                                if appState.profile.cookingStyles.contains(s) {
+                                    appState.profile.cookingStyles.removeAll { $0 == s }
+                                } else {
+                                    appState.profile.cookingStyles.append(s)
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer().frame(height: 24)
+
+                    Eyebrow("Anything else?")
+                    Spacer().frame(height: 8)
+
+                    ZStack(alignment: .topLeading) {
+                        if appState.profile.cookingStyleNotes.isEmpty {
+                            Text("e.g. I love Ottolenghi, always come back to tahini and lemon…")
+                                .font(LFont.body(14))
+                                .foregroundColor(.lInk3)
+                                .italic()
+                                .padding(16)
+                                .allowsHitTesting(false)
+                        }
+                        TextEditor(text: $appState.profile.cookingStyleNotes)
+                            .font(LFont.body(14))
+                            .foregroundColor(.lInk)
+                            .scrollContentBackground(.hidden)
+                            .padding(12)
+                            .frame(minHeight: 100)
+                            .focused($notesFocused)
+                    }
+                    .background(Color.lPaper)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.lRule, lineWidth: 1))
+
+                    Spacer().frame(height: 40)
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 32)
+            }
+
+            VStack {
+                PillButton(label: "Continue") {
+                    notesFocused = false
+                    appState.advance()
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 12)
+            .padding(.bottom, 40)
+        }
+        .background(Color.lCream.ignoresSafeArea())
+    }
+}
+
+// MARK: - Notes step
+struct SignupNotesScreen: View {
+    @EnvironmentObject var appState: AppState
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            SignupHeaderView(step: 3)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Eyebrow("Step 4 of 5")
                     Spacer().frame(height: 12)
 
                     VStack(alignment: .leading, spacing: 0) {
@@ -276,11 +371,11 @@ struct SignupAPIKeyScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            SignupHeaderView(step: 3)
+            SignupHeaderView(step: 4)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Eyebrow("Step 4 of 4")
+                    Eyebrow("Step 5 of 5")
                     Spacer().frame(height: 12)
 
                     VStack(alignment: .leading, spacing: 0) {

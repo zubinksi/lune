@@ -5,6 +5,7 @@ enum AppScreen: String {
     case connect
     case signupSymptoms
     case signupDiet
+    case signupCookingStyle
     case signupNotes
     case signupAPIKey
     case home
@@ -148,6 +149,8 @@ class AppState: ObservableObject {
         let phase = phaseInfo
         let symptoms = profile.symptoms.isEmpty ? "none" : profile.symptoms.joined(separator: ", ")
         let diet = profile.diet.isEmpty ? "no restrictions" : profile.diet.joined(separator: ", ")
+        let cookingStyles = profile.cookingStyles.isEmpty ? "no preference" : profile.cookingStyles.joined(separator: ", ")
+        let cookingStyleNotes = profile.cookingStyleNotes.trimmingCharacters(in: .whitespacesAndNewlines)
         let mood = dailyLog.mood ?? "not logged"
         let notes = profile.notes.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -159,6 +162,7 @@ class AppState: ObservableObject {
         Context:
         - Symptoms to address: \(symptoms)
         - Dietary preferences: \(diet)
+        - Cooking style & flavour profile: \(cookingStyles)\(cookingStyleNotes.isEmpty ? "" : ". Additional: \(cookingStyleNotes)")
         - How she feels today: \(mood)
         - Personal notes: \(notes.isEmpty ? "none" : notes)
 
@@ -243,21 +247,23 @@ class AppState: ObservableObject {
 
     func advance() {
         switch screen {
-        case .connect:        screen = .signupSymptoms
-        case .signupSymptoms: screen = .signupDiet
-        case .signupDiet:     screen = .signupNotes
-        case .signupNotes:    screen = .signupAPIKey
-        case .signupAPIKey:   screen = .home
-        case .home:           break
+        case .connect:             screen = .signupSymptoms
+        case .signupSymptoms:      screen = .signupDiet
+        case .signupDiet:          screen = .signupCookingStyle
+        case .signupCookingStyle:  screen = .signupNotes
+        case .signupNotes:         screen = .signupAPIKey
+        case .signupAPIKey:        screen = .home
+        case .home:                break
         }
     }
 
     func back() {
         switch screen {
-        case .signupDiet:     screen = .signupSymptoms
-        case .signupNotes:    screen = .signupDiet
-        case .signupAPIKey:   screen = .signupNotes
-        default:              break
+        case .signupDiet:          screen = .signupSymptoms
+        case .signupCookingStyle:  screen = .signupDiet
+        case .signupNotes:         screen = .signupCookingStyle
+        case .signupAPIKey:        screen = .signupNotes
+        default:                   break
         }
     }
 }

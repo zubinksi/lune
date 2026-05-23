@@ -5,6 +5,8 @@ struct Profile: Codable {
     var name: String = "Genesha"
     var symptoms: [String] = []
     var diet: [String] = []
+    var cookingStyles: [String] = []
+    var cookingStyleNotes: String = ""
     var notes: String = ""
     var healthKitConnected: Bool = false
     var manualCycleLength: Int = 28

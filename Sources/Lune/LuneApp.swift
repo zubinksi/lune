@@ -19,10 +19,11 @@ struct RootView: View {
         Group {
             switch appState.screen {
             case .connect:         ConnectScreen()
-            case .signupSymptoms:  SignupSymptomsScreen()
-            case .signupDiet:      SignupDietScreen()
-            case .signupNotes:     SignupNotesScreen()
-            case .signupAPIKey:    SignupAPIKeyScreen()
+            case .signupSymptoms:      SignupSymptomsScreen()
+            case .signupDiet:          SignupDietScreen()
+            case .signupCookingStyle:  SignupCookingStyleScreen()
+            case .signupNotes:         SignupNotesScreen()
+            case .signupAPIKey:        SignupAPIKeyScreen()
             case .home:            HomeScreen()
             }
         }

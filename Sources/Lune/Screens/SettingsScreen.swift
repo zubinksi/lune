@@ -95,6 +95,45 @@ struct SettingsScreen: View {
 
                     rule(40)
 
+                    // MARK: Cooking style
+                    sectionLabel("Your palate")
+                    Spacer().frame(height: 6)
+                    BodyText(text: "Shapes the flavour and style of every recipe Ona suggests.", size: 13)
+                    Spacer().frame(height: 16)
+
+                    FlowLayout(spacing: 8) {
+                        ForEach(kCookingStyles, id: \.self) { s in
+                            ChipButton(label: s, selected: appState.profile.cookingStyles.contains(s)) {
+                                toggle(&appState.profile.cookingStyles, item: s)
+                            }
+                        }
+                    }
+
+                    Spacer().frame(height: 16)
+
+                    ZStack(alignment: .topLeading) {
+                        if appState.profile.cookingStyleNotes.isEmpty {
+                            Text("e.g. I love Ottolenghi, always come back to tahini and lemon…")
+                                .font(LFont.body(14))
+                                .foregroundColor(.lInk3)
+                                .italic()
+                                .padding(16)
+                                .allowsHitTesting(false)
+                        }
+                        TextEditor(text: $appState.profile.cookingStyleNotes)
+                            .font(LFont.body(14))
+                            .foregroundColor(.lInk)
+                            .scrollContentBackground(.hidden)
+                            .padding(12)
+                            .frame(minHeight: 90)
+                    }
+                    .background(Color.lPaper)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.lRule, lineWidth: 1))
+
+                    rule(40)
+
                     // MARK: Refresh meals
                     sectionLabel("Today's nourishment")
                     Spacer().frame(height: 6)

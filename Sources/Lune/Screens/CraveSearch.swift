@@ -185,6 +185,10 @@ struct CraveSearchSection: View {
         let diet = appState.profile.diet.isEmpty
             ? "no restrictions"
             : appState.profile.diet.joined(separator: ", ")
+        let cookingStyles = appState.profile.cookingStyles.isEmpty
+            ? "no preference"
+            : appState.profile.cookingStyles.joined(separator: ", ")
+        let cookingStyleNotes = appState.profile.cookingStyleNotes.trimmingCharacters(in: .whitespacesAndNewlines)
         let mood = appState.dailyLog.mood ?? "not logged"
         let notes = appState.profile.notes.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -196,6 +200,7 @@ struct CraveSearchSection: View {
         - How she feels today: \(mood)
         - Symptoms she wants to address: \(symptoms)
         - Dietary preferences: \(diet)
+        - Cooking style & flavour profile: \(cookingStyles)\(cookingStyleNotes.isEmpty ? "" : ". Additional: \(cookingStyleNotes)")
         - Personal notes: \(notes.isEmpty ? "none" : notes)
         - She is craving / wants to use: \(q)
 
