@@ -89,7 +89,7 @@ struct HomeScreen: View {
             }
             .padding(.top, 8)
         }
-        .padding(.horizontal, 50)
+        .padding(.horizontal, 24)
         .padding(.top, 70)
         .padding(.bottom, 8)
     }
@@ -102,14 +102,19 @@ struct HomeScreen: View {
         return VStack(alignment: .leading, spacing: 0) {
             // Moon + phase name + day counter
             HStack(alignment: .center, spacing: 14) {
-                MoonView(
-                    phase: phase.phase,
-                    size: 48,
-                    litColor: .lInk,
-                    darkColor: .lCream2,
-                    showCraters: false,
-                    showGlow: false
-                )
+                ZStack {
+                    MoonView(
+                        phase: phase.phase,
+                        size: 48,
+                        litColor: .lInk,
+                        darkColor: .lCream2,
+                        showCraters: true,
+                        showGlow: false
+                    )
+                    Circle()
+                        .strokeBorder(Color.lRule, lineWidth: 1)
+                        .frame(width: 48, height: 48)
+                }
 
                 Text(phase.name)
                     .font(LFont.display(24, italic: true))
@@ -157,7 +162,7 @@ struct HomeScreen: View {
         .padding(.horizontal, 22)
         .padding(.vertical, 20)
         .cardStyle()
-        .padding(.horizontal, 50)
+        .padding(.horizontal, 24)
     }
 
     // MARK: - Mood check-in
@@ -200,7 +205,7 @@ struct HomeScreen: View {
                 .transition(.opacity)
             }
         }
-        .padding(.horizontal, 50)
+        .padding(.horizontal, 24)
         .animation(.easeInOut(duration: 0.18), value: appState.dailyLog.mood)
     }
 
@@ -248,7 +253,7 @@ struct HomeScreen: View {
                 }
             }
         }
-        .padding(.horizontal, 50)
+        .padding(.horizontal, 24)
     }
 
     // MARK: - Cycle history (saved recipes from this phase)
@@ -263,12 +268,6 @@ struct HomeScreen: View {
             ZStack(alignment: .topTrailing) {
                 Color.lInk
                     .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-
-                MoonView(phase: 0.65, size: 160, litColor: .lCream, darkColor: .lInk,
-                         showCraters: false, showGlow: false)
-                    .opacity(0.15)
-                    .offset(x: 40, y: -30)
-                    .allowsHitTesting(false)
 
                 VStack(alignment: .leading, spacing: 0) {
                     if phaseRecipes.isEmpty {
@@ -317,7 +316,7 @@ struct HomeScreen: View {
                 .padding(.vertical, 22)
             }
         }
-        .padding(.horizontal, 50)
+        .padding(.horizontal, 24)
         .sheet(item: $selectedSavedRecipe) { r in
             SavedRecipeSheet(recipe: r)
                 .environmentObject(appState)
@@ -363,7 +362,7 @@ struct HomeScreen: View {
                     .foregroundColor(Color.lRule)
             )
         }
-        .padding(.horizontal, 50)
+        .padding(.horizontal, 24)
     }
 
     // MARK: - Footer
@@ -678,7 +677,7 @@ struct SavedRecipeSheet: View {
 
                     Spacer().frame(height: 40)
                 }
-                .padding(.horizontal, 50)
+                .padding(.horizontal, 24)
             }
 
             HStack {
@@ -697,7 +696,7 @@ struct SavedRecipeSheet: View {
                         .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
                 }
             }
-            .padding(.horizontal, 50)
+            .padding(.horizontal, 24)
             .padding(.top, 20)
             .background(
                 Color.lCream

@@ -327,7 +327,7 @@ struct SettingsScreen: View {
 
                     Spacer().frame(height: 60)
                 }
-                .padding(.horizontal, 50)
+                .padding(.horizontal, 24)
             }
 
             // Top bar
@@ -352,7 +352,7 @@ struct SettingsScreen: View {
                         .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
                 }
             }
-            .padding(.horizontal, 50)
+            .padding(.horizontal, 24)
             .padding(.top, 20)
             .background(
                 Color.lCream

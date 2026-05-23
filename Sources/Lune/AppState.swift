@@ -49,14 +49,15 @@ class AppState: ObservableObject {
     // MARK: - Persistence
 
     func computeCycleDayFromManual() {
-        guard !profile.healthKitConnected, let refDate = profile.referencePeriodDate else { return }
+        guard !profile.healthKitConnected else { return }
+        let length = max(profile.manualCycleLength, 1)
+        cycleLength = length
+        guard let refDate = profile.referencePeriodDate else { return }
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
         let ref = cal.startOfDay(for: refDate)
         let days = cal.dateComponents([.day], from: ref, to: today).day ?? 0
         guard days >= 0 else { return }
-        let length = max(profile.manualCycleLength, 1)
-        cycleLength = length
         cycleDay = (days % length) + 1
     }
 
