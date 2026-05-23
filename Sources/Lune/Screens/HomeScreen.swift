@@ -15,6 +15,7 @@ struct HomeScreen: View {
     }
 
     @State private var showSettings = false
+    @State private var showSavedRecipes = false
     @State private var nourishmentRefreshed = false
 
     private var hasAPIKey: Bool {
@@ -56,6 +57,10 @@ struct HomeScreen: View {
         .onChange(of: appState.nourishmentLoading) { _, isLoading in
             if !isLoading { nourishmentRefreshed = false }
         }
+        .sheet(isPresented: $showSavedRecipes) {
+            SavedRecipesLibrarySheet()
+                .environmentObject(appState)
+        }
         .sheet(isPresented: $showSettings) {
             SettingsScreen()
                 .environmentObject(appState)
@@ -86,10 +91,17 @@ struct HomeScreen: View {
 
             Spacer()
 
-            Button { showSettings = true } label: {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 20, weight: .light))
-                    .foregroundColor(.lInk2)
+            HStack(spacing: 16) {
+                Button { showSavedRecipes = true } label: {
+                    Image(systemName: appState.savedRecipes.isEmpty ? "bookmark" : "bookmark.fill")
+                        .font(.system(size: 18, weight: .light))
+                        .foregroundColor(appState.savedRecipes.isEmpty ? .lInk2 : .lPlum)
+                }
+                Button { showSettings = true } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 20, weight: .light))
+                        .foregroundColor(.lInk2)
+                }
             }
             .padding(.top, 8)
         }
@@ -725,6 +737,117 @@ struct SavedRecipeSheet: View {
                     .ignoresSafeArea(edges: .top)
                     .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
             )
+        }
+    }
+}
+
+// MARK: - Saved recipes library sheet
+struct SavedRecipesLibrarySheet: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedRecipe: Recipe? = nil
+
+    private let phaseOrder = ["Menstrual", "Follicular", "Ovulatory", "Luteal"]
+
+    private var groupedRecipes: [(phase: String, recipes: [Recipe])] {
+        phaseOrder.compactMap { phase in
+            let recipes = appState.savedRecipes.filter { $0.phase == phase }
+            return recipes.isEmpty ? nil : (phase: phase, recipes: recipes)
+        }
+    }
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Color.lCream.ignoresSafeArea()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Spacer().frame(height: 80)
+
+                    if appState.savedRecipes.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("No saved recipes yet.")
+                                .font(LFont.display(22))
+                                .foregroundColor(.lInk)
+                            BodyText(text: "Bookmark recipes from your daily nourishment or the Craving Something search and they'll appear here.", size: 14)
+                        }
+                        .padding(.top, 40)
+                    } else {
+                        ForEach(groupedRecipes, id: \.phase) { group in
+                            Eyebrow(group.phase)
+                            Spacer().frame(height: 12)
+
+                            VStack(spacing: 0) {
+                                ForEach(group.recipes) { recipe in
+                                    Button { selectedRecipe = recipe } label: {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 3) {
+                                                Text(recipe.name)
+                                                    .font(LFont.displayRegular(17))
+                                                    .foregroundColor(.lInk)
+                                                    .multilineTextAlignment(.leading)
+                                                Text(recipe.time)
+                                                    .font(LFont.body(12))
+                                                    .foregroundColor(.lInk3)
+                                            }
+                                            Spacer()
+                                            Image(systemName: "chevron.right")
+                                                .font(.system(size: 11))
+                                                .foregroundColor(.lInk3)
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 14)
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    if recipe.id != group.recipes.last?.id {
+                                        Divider()
+                                            .background(Color.lRule)
+                                            .padding(.leading, 16)
+                                    }
+                                }
+                            }
+                            .background(Color.lPaper)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.lRule, lineWidth: 1))
+
+                            Spacer().frame(height: 28)
+                        }
+                    }
+
+                    Spacer().frame(height: 40)
+                }
+                .padding(.horizontal, 24)
+            }
+
+            HStack {
+                Text("Saved")
+                    .font(LFont.display(22))
+                    .foregroundColor(.lInk)
+                Spacer()
+                Button { dismiss() } label: {
+                    Text("Done")
+                        .font(LFont.body(15, weight: .medium))
+                        .foregroundColor(.lPlum)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.lCream)
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            .background(
+                Color.lCream
+                    .ignoresSafeArea(edges: .top)
+                    .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
+            )
+        }
+        .sheet(item: $selectedRecipe) { recipe in
+            SavedRecipeSheet(recipe: recipe)
+                .environmentObject(appState)
         }
     }
 }
