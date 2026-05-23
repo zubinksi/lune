@@ -16,6 +16,7 @@ struct HomeScreen: View {
 
     @State private var showSettings = false
     @State private var showSavedRecipes = false
+    @State private var showPhaseInfo = false
     @State private var nourishmentRefreshed = false
 
     private var hasAPIKey: Bool {
@@ -56,6 +57,9 @@ struct HomeScreen: View {
         }
         .onChange(of: appState.nourishmentLoading) { _, isLoading in
             if !isLoading { nourishmentRefreshed = false }
+        }
+        .sheet(isPresented: $showPhaseInfo) {
+            PhaseInfoSheet(phase: phase)
         }
         .sheet(isPresented: $showSavedRecipes) {
             SavedRecipesLibrarySheet()
@@ -128,10 +132,18 @@ struct HomeScreen: View {
     // MARK: - Phase name + cycle strip
     var phaseNameAndStrip: some View {
         VStack(spacing: 6) {
-            Text(phase.name)
-                .font(LFont.display(32))
-                .foregroundColor(.lInk)
-                .frame(maxWidth: .infinity, alignment: .center)
+            Button { showPhaseInfo = true } label: {
+                HStack(spacing: 7) {
+                    Text(phase.name)
+                        .font(LFont.display(32))
+                        .foregroundColor(.lInk)
+                    Image(systemName: "info.circle")
+                        .font(.system(size: 16, weight: .light))
+                        .foregroundColor(.lInk3)
+                        .padding(.top, 4)
+                }
+            }
+            .buttonStyle(.plain)
 
             Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
                 .font(LFont.mono(12))
@@ -717,6 +729,116 @@ struct SavedRecipeSheet: View {
             HStack {
                 Text(recipe.phase.isEmpty ? "Saved recipe" : recipe.phase)
                     .font(LFont.display(20))
+                    .foregroundColor(.lInk)
+                Spacer()
+                Button { dismiss() } label: {
+                    Text("Done")
+                        .font(LFont.body(15, weight: .medium))
+                        .foregroundColor(.lPlum)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.lCream)
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            .background(
+                Color.lCream
+                    .ignoresSafeArea(edges: .top)
+                    .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
+            )
+        }
+    }
+}
+
+// MARK: - Phase info sheet
+struct PhaseInfoSheet: View {
+    let phase: CyclePhaseInfo
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Color.lCream.ignoresSafeArea()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Spacer().frame(height: 80)
+
+                    if let detail = phaseDetails[phase.name] {
+                        Eyebrow(detail.days)
+                        Spacer().frame(height: 8)
+                        Text(phase.name)
+                            .font(LFont.display(34))
+                            .foregroundColor(.lInk)
+
+                        Spacer().frame(height: 28)
+
+                        // Hormones
+                        Eyebrow("What's happening")
+                        Spacer().frame(height: 10)
+                        Text(detail.hormones)
+                            .font(LFont.body(15))
+                            .foregroundColor(.lInk)
+                            .lineSpacing(5)
+
+                        Spacer().frame(height: 28)
+                        Divider().background(Color.lRule)
+                        Spacer().frame(height: 28)
+
+                        // You might notice
+                        Eyebrow("You might notice")
+                        Spacer().frame(height: 12)
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(detail.youMightNotice, id: \.self) { item in
+                                HStack(alignment: .top, spacing: 12) {
+                                    Circle()
+                                        .fill(Color.phase(named: phase.name))
+                                        .frame(width: 5, height: 5)
+                                        .padding(.top, 7)
+                                    Text(item)
+                                        .font(LFont.body(15))
+                                        .foregroundColor(.lInk)
+                                        .lineSpacing(3)
+                                }
+                            }
+                        }
+
+                        Spacer().frame(height: 28)
+                        Divider().background(Color.lRule)
+                        Spacer().frame(height: 28)
+
+                        // Nutrition
+                        Eyebrow("How to eat for it")
+                        Spacer().frame(height: 10)
+                        Text(detail.nutritionFocus)
+                            .font(LFont.body(15))
+                            .foregroundColor(.lInk)
+                            .lineSpacing(5)
+
+                        Spacer().frame(height: 20)
+
+                        // Lean into foods
+                        if let foods = phaseFoods[phase.name] {
+                            FlowLayout(spacing: 8) {
+                                ForEach(foods, id: \.self) { food in
+                                    TagChip(label: food, background: .lCream)
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer().frame(height: 60)
+                }
+                .padding(.horizontal, 24)
+            }
+
+            HStack {
+                Color.clear.frame(width: 60)
+                Spacer()
+                Text(phase.name)
+                    .font(LFont.display(18))
                     .foregroundColor(.lInk)
                 Spacer()
                 Button { dismiss() } label: {

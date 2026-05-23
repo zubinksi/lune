@@ -111,3 +111,58 @@ let phaseFoods: [String: [String]] = [
     "Ovulatory": ["berries", "flax seeds", "cucumber", "quinoa", "turmeric"],
     "Luteal": ["pumpkin seeds", "dark leafy greens", "sweet potato", "salmon", "ginger", "dark chocolate"],
 ]
+
+struct PhaseDetail {
+    let days: String
+    let hormones: String
+    let youMightNotice: [String]
+    let nutritionFocus: String
+}
+
+let phaseDetails: [String: PhaseDetail] = [
+    "Menstrual": PhaseDetail(
+        days: "Days 1–5",
+        hormones: "Estrogen and progesterone drop to their lowest levels, signalling the uterine lining to shed. This is a time of release and reset — the body clears the slate for a new cycle.",
+        youMightNotice: [
+            "Cramping or lower back ache",
+            "Fatigue and a need for more rest",
+            "Heightened sensitivity or emotional depth",
+            "A natural pull toward slowness and quiet",
+        ],
+        nutritionFocus: "Replenish the iron lost through bleeding with dark leafy greens, lentils, and bone broth. Anti-inflammatory foods like ginger and turmeric ease cramping. Warm, easy-to-digest meals are kinder on the system than raw or cold foods right now."
+    ),
+    "Follicular": PhaseDetail(
+        days: "Days 6–13",
+        hormones: "FSH (follicle-stimulating hormone) rises, kick-starting follicle development in the ovaries. Estrogen climbs steadily in response — bringing with it a lift in energy, mood, and mental sharpness.",
+        youMightNotice: [
+            "Rising energy and motivation",
+            "A clearer, more optimistic headspace",
+            "Increased creativity and social ease",
+            "Stronger physical endurance",
+        ],
+        nutritionFocus: "Your body is building. Light, fresh foods — sprouts, raw vegetables, fermented foods — support rising estrogen and gut health. Seeds like flax and pumpkin provide the fatty acids your hormones need. Lean proteins fuel the upswing in energy."
+    ),
+    "Ovulatory": PhaseDetail(
+        days: "Days 14–16",
+        hormones: "A surge of LH (luteinising hormone) triggers ovulation. Estrogen peaks and testosterone briefly rises alongside it — this is your body at its most outwardly energised and confident.",
+        youMightNotice: [
+            "Peak energy and physical warmth",
+            "Heightened confidence and sociability",
+            "Increased libido",
+            "Slightly elevated body temperature",
+        ],
+        nutritionFocus: "Cooling, fibre-rich foods help your body process the peak in estrogen and offset the natural rise in body heat. Berries, cucumber, flax seeds, and quinoa are all well-suited here. Keep meals light and fresh rather than heavy or rich."
+    ),
+    "Luteal": PhaseDetail(
+        days: "Days 17–28",
+        hormones: "Progesterone rises to prepare the uterine lining for potential implantation. If pregnancy doesn't occur, both estrogen and progesterone fall in the final days — which is what drives PMS symptoms.",
+        youMightNotice: [
+            "Slowing energy and a need for more rest",
+            "Bloating or water retention",
+            "Cravings, especially for carbs and chocolate",
+            "Mood sensitivity or emotional tenderness",
+            "Breast tenderness in the latter half",
+        ],
+        nutritionFocus: "Magnesium is your best friend — it eases cramping, supports mood, and is found in pumpkin seeds, dark chocolate, and leafy greens. Complex carbs like sweet potato and lentils steady blood sugar and serotonin. B vitamins help the liver process the hormonal shift."
+    ),
+]
