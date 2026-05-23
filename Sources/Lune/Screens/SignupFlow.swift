@@ -149,7 +149,7 @@ struct SignupDietScreen: View {
 
                     Spacer().frame(height: 12)
 
-                    BodyText(text: "Restrictions, preferences, what you want more of — pick anything that's true.")
+                    BodyText(text: "Pick anything that applies — Ona will work around it.")
 
                     Spacer().frame(height: 28)
 

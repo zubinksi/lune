@@ -51,7 +51,7 @@ struct SettingsScreen: View {
                     // MARK: Diet
                     sectionLabel("How you eat")
                     Spacer().frame(height: 6)
-                    BodyText(text: "Restrictions, preferences, what you want more of.", size: 13)
+                    BodyText(text: "Restrictions and dietary preferences.", size: 13)
                     Spacer().frame(height: 16)
 
                     FlowLayout(spacing: 8) {
