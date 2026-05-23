@@ -762,9 +762,11 @@ struct CycleStripView: View {
                 .padding(.horizontal, 24)
                 .padding(.vertical, 4)
             }
+            .frame(maxWidth: .infinity)
             .onAppear {
                 proxy.scrollTo(day, anchor: .center)
             }
         }
+        .frame(maxWidth: .infinity)
     }
 }
