@@ -24,9 +24,7 @@ struct HomeScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 greeting
-                moonHero
-                phaseNameAndStrip
-                phaseCard
+                phaseHeaderCard
                 divider(32)
                 moodCheckIn
                 divider(32)
@@ -96,64 +94,46 @@ struct HomeScreen: View {
         .padding(.bottom, 8)
     }
 
-    // MARK: - Moon hero
-    var moonHero: some View {
-        // Near new moon (phase < 0.12 or > 0.88): disk is mostly cream — use dark text
-        let onDarkMoon = phase.phase >= 0.12 && phase.phase <= 0.88
-        let textColor: Color = onDarkMoon ? .lCream : .lInk
-        let shadowColor: Color = onDarkMoon ? .black.opacity(0.45) : .white.opacity(0.5)
-
-        return ZStack {
-            MoonView(
-                phase: phase.phase,
-                size: 220,
-                litColor: .lInk,
-                darkColor: .lCream2,
-                showCraters: true,
-                showGlow: false
-            )
-
-            VStack(spacing: 4) {
-                Text("DAY")
-                    .font(LFont.mono(10))
-                    .tracking(2)
-                    .foregroundColor(textColor.opacity(0.75))
-                Text("\(appState.cycleDay)")
-                    .font(LFont.display(56))
-                    .foregroundColor(textColor)
-                    .tracking(0)
-                Text("of \(appState.cycleLength)")
-                    .font(LFont.mono(10))
-                    .tracking(1.5)
-                    .foregroundColor(textColor.opacity(0.65))
-            }
-            .shadow(color: shadowColor, radius: 8, x: 0, y: 0)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-    }
-
-    // MARK: - Phase name + cycle strip
-    var phaseNameAndStrip: some View {
-        VStack(spacing: 16) {
-            Text(phase.name)
-                .font(LFont.display(28, italic: true))
-                .foregroundColor(.lInk)
-
-            CycleStripView(day: appState.cycleDay, length: appState.cycleLength)
-        }
-        .padding(.horizontal, 50)
-        .padding(.bottom, 8)
-    }
-
-    // MARK: - Phase education card
-    var phaseCard: some View {
+    // MARK: - Phase header card (moon + phase + day + explainer + foods)
+    var phaseHeaderCard: some View {
         let explainer = phaseExplainer[phase.name] ?? ""
         let foods = phaseFoods[phase.name] ?? []
 
         return VStack(alignment: .leading, spacing: 0) {
-            Eyebrow("Why this phase matters", color: phaseColor)
+            // Moon + phase name + day counter
+            HStack(alignment: .center, spacing: 14) {
+                MoonView(
+                    phase: phase.phase,
+                    size: 48,
+                    litColor: .lInk,
+                    darkColor: .lCream2,
+                    showCraters: false,
+                    showGlow: false
+                )
 
+                Text(phase.name)
+                    .font(LFont.display(24, italic: true))
+                    .foregroundColor(.lInk)
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text("DAY \(appState.cycleDay)")
+                        .font(LFont.mono(11))
+                        .tracking(1)
+                        .foregroundColor(.lInk)
+                    Text("of \(appState.cycleLength)")
+                        .font(LFont.mono(9))
+                        .tracking(0.8)
+                        .foregroundColor(.lInk3)
+                }
+            }
+
+            Spacer().frame(height: 16)
+            Divider().background(Color.lRule)
+            Spacer().frame(height: 14)
+
+            Eyebrow("Why this phase matters", color: phaseColor)
             Spacer().frame(height: 8)
 
             Text(explainer)
@@ -165,6 +145,7 @@ struct HomeScreen: View {
             Spacer().frame(height: 14)
             Divider().background(Color.lRule)
             Spacer().frame(height: 14)
+
             Eyebrow("Lean into")
             Spacer().frame(height: 8)
             FlowLayout(spacing: 6) {
