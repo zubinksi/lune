@@ -53,7 +53,7 @@ struct ProgressDots: View {
 
 // MARK: - Symptom step
 let kSymptoms = ["Bloating", "Mood swings", "Cramping", "Cravings", "Sleeplessness", "Fatigue"]
-let kDiets = ["Vegetarian", "Vegan", "Pescatarian", "No dairy", "No nuts", "More fruit", "More veg", "More protein"]
+let kDiets = ["Vegetarian", "Vegan", "Pescatarian", "No dairy", "No nuts", "Gluten-free", "No eggs", "Low FODMAP"]
 let kCookingStyles = [
     "Bold & spiced", "Bright & acidic", "Herb-forward", "Smoky & charred", "Warm & aromatic",
     "Lots of vegetables", "Legume & grain heavy", "Seafood-forward",
