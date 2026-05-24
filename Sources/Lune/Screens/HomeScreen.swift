@@ -16,7 +16,6 @@ struct HomeScreen: View {
 
     @State private var showSettings = false
     @State private var showSavedRecipes = false
-    @State private var showPhaseInfo = false
     @State private var nourishmentRefreshed = false
     @State private var phaseCardExpanded = false
 
@@ -40,8 +39,6 @@ struct HomeScreen: View {
                     CraveSearchSection()
                 }
                 divider(32)
-                cycleHistoryCard
-                divider(32)
                 partnerShare
                 divider(24)
                 footer
@@ -58,9 +55,6 @@ struct HomeScreen: View {
         }
         .onChange(of: appState.nourishmentLoading) { _, isLoading in
             if !isLoading { nourishmentRefreshed = false }
-        }
-        .sheet(isPresented: $showPhaseInfo) {
-            PhaseInfoSheet(phase: phase)
         }
         .sheet(isPresented: $showSavedRecipes) {
             SavedRecipesLibrarySheet()
@@ -133,18 +127,10 @@ struct HomeScreen: View {
     // MARK: - Phase name + cycle strip
     var phaseNameAndStrip: some View {
         VStack(spacing: 6) {
-            Button { showPhaseInfo = true } label: {
-                HStack(spacing: 7) {
-                    Text(phase.name)
-                        .font(LFont.display(32))
-                        .foregroundColor(.lInk)
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 16, weight: .light))
-                        .foregroundColor(.lInk3)
-                        .padding(.top, 4)
-                }
-            }
-            .buttonStyle(.plain)
+            Text(phase.name)
+                .font(LFont.display(32))
+                .foregroundColor(.lInk)
+                .frame(maxWidth: .infinity, alignment: .center)
 
             Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
                 .font(LFont.mono(12))
@@ -221,7 +207,7 @@ struct HomeScreen: View {
             SectionHeader(title: "How are you feeling today?")
 
             if appState.dailyLog.mood == nil {
-                BodyText(text: "Tell Ona how you feel and she'll shape today's meals around it.", size: 13)
+                BodyText(text: "Ona will shape meals around how you feel.", size: 13)
                     .padding(.bottom, 14)
             }
 
@@ -332,73 +318,6 @@ struct HomeScreen: View {
             }
         }
         .padding(.horizontal, 0)
-    }
-
-    // MARK: - Cycle history (saved recipes from this phase)
-    @State private var selectedSavedRecipe: Recipe? = nil
-
-    var cycleHistoryCard: some View {
-        let phaseRecipes = appState.savedRecipes.filter { $0.phase == phase.name }
-
-        return VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(title: "From last cycle")
-
-            ZStack(alignment: .topTrailing) {
-                Color.lInk
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 0) {
-                    if phaseRecipes.isEmpty {
-                        Eyebrow("Nothing saved yet", color: Color.lCream.opacity(0.55))
-                        Spacer().frame(height: 10)
-                        Text("Bookmark a recipe during your \(phase.name.lowercased()) phase and it'll live here for next time.")
-                            .font(LFont.body(14))
-                            .foregroundColor(Color.lCream.opacity(0.8))
-                            .lineSpacing(4)
-                            .frame(maxWidth: 270, alignment: .leading)
-                    } else {
-                        Eyebrow("Saved this phase", color: Color.lCream.opacity(0.55))
-                        Spacer().frame(height: 10)
-                        VStack(alignment: .leading, spacing: 0) {
-                            ForEach(phaseRecipes.prefix(3)) { r in
-                                Button { selectedSavedRecipe = r } label: {
-                                    HStack {
-                                        Text(r.name)
-                                            .font(LFont.displayRegular(17))
-                                            .foregroundColor(.lCream)
-                                            .lineSpacing(2)
-                                            .multilineTextAlignment(.leading)
-                                        Spacer()
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 11))
-                                            .foregroundColor(Color.lCream.opacity(0.45))
-                                    }
-                                    .padding(.vertical, 8)
-                                }
-                                .buttonStyle(.plain)
-                                if r.id != phaseRecipes.prefix(3).last?.id {
-                                    Divider().background(Color.lCream.opacity(0.15))
-                                }
-                            }
-                        }
-                        if phaseRecipes.count > 3 {
-                            Spacer().frame(height: 10)
-                            Text("+ \(phaseRecipes.count - 3) more saved")
-                                .font(LFont.mono(10))
-                                .tracking(0.8)
-                                .foregroundColor(Color.lCream.opacity(0.45))
-                        }
-                    }
-                }
-                .padding(.horizontal, 22)
-                .padding(.vertical, 22)
-            }
-        }
-        .padding(.horizontal, 24)
-        .sheet(item: $selectedSavedRecipe) { r in
-            SavedRecipeSheet(recipe: r)
-                .environmentObject(appState)
-        }
     }
 
     // MARK: - Partner share
@@ -667,8 +586,10 @@ struct NourishmentCard: View {
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
+            if !expanded { Spacer(minLength: 0) }
         }
         .padding(18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .cardStyle()
     }
 }
@@ -782,114 +703,6 @@ struct SavedRecipeSheet: View {
                     .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
             )
         }
-    }
-}
-
-// MARK: - Phase info sheet
-struct PhaseInfoSheet: View {
-    let phase: CyclePhaseInfo
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            Color.lCream.ignoresSafeArea()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    Spacer().frame(height: 80)
-
-                    let detail = phaseDetails[phase.name]
-
-                    Eyebrow(detail?.days ?? "")
-                    Spacer().frame(height: 8)
-                    Text(phase.name)
-                        .font(LFont.display(34))
-                        .foregroundColor(.lInk)
-
-                    Spacer().frame(height: 28)
-
-                    Eyebrow("What's happening")
-                    Spacer().frame(height: 10)
-                    Text(detail?.hormones ?? "")
-                        .font(LFont.body(15))
-                        .foregroundColor(.lInk)
-                        .lineSpacing(5)
-
-                    Spacer().frame(height: 28)
-                    Divider().background(Color.lRule)
-                    Spacer().frame(height: 28)
-
-                    Eyebrow("You might notice")
-                    Spacer().frame(height: 12)
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(detail?.youMightNotice ?? [], id: \.self) { item in
-                            HStack(alignment: .top, spacing: 12) {
-                                Circle()
-                                    .fill(Color.phase(named: phase.name))
-                                    .frame(width: 5, height: 5)
-                                    .padding(.top, 7)
-                                Text(item)
-                                    .font(LFont.body(15))
-                                    .foregroundColor(.lInk)
-                                    .lineSpacing(3)
-                            }
-                        }
-                    }
-
-                    Spacer().frame(height: 28)
-                    Divider().background(Color.lRule)
-                    Spacer().frame(height: 28)
-
-                    Eyebrow("How to eat for it")
-                    Spacer().frame(height: 10)
-                    Text(detail?.nutritionFocus ?? "")
-                        .font(LFont.body(15))
-                        .foregroundColor(.lInk)
-                        .lineSpacing(5)
-
-                    Spacer().frame(height: 20)
-
-                    if let foods = phaseFoods[phase.name] {
-                        FlowLayout(spacing: 8) {
-                            ForEach(foods, id: \.self) { food in
-                                TagChip(label: food, background: .lCream)
-                            }
-                        }
-                    }
-
-                    Spacer().frame(height: 60)
-                }
-                .padding(.horizontal, 24)
-                .frame(maxWidth: .infinity)
-            }
-
-            HStack {
-                Color.clear.frame(width: 60)
-                Spacer()
-                Text(phase.name)
-                    .font(LFont.display(18))
-                    .foregroundColor(.lInk)
-                Spacer()
-                Button { dismiss() } label: {
-                    Text("Done")
-                        .font(LFont.body(15, weight: .medium))
-                        .foregroundColor(.lPlum)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Color.lCream)
-                        .clipShape(Capsule())
-                        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 20)
-            .background(
-                Color.lCream
-                    .ignoresSafeArea(edges: .top)
-                    .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
-            )
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
