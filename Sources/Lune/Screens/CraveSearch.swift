@@ -26,7 +26,6 @@ struct CraveSearchSection: View {
     @State private var expandedIndex: Int? = 0
     @FocusState private var isFocused: Bool
 
-    private let ideas = ["beets", "dark chocolate", "sweet potato", "salmon", "ginger"]
     private var phase: CyclePhaseInfo { appState.phaseInfo }
     private var isExpanded: Bool { isFocused || !query.isEmpty || recipes != nil || loading }
 
@@ -34,10 +33,10 @@ struct CraveSearchSection: View {
         VStack(alignment: .leading, spacing: 0) {
 
             // Section header
-            Eyebrow("Craving something?")
+            Eyebrow("Need or craving something?")
             Spacer().frame(height: 6)
             Text("Tell Ona")
-                .font(LFont.display(28))
+                .font(LFont.display(22, italic: true))
                 .foregroundColor(.lInk)
             Spacer().frame(height: 16)
 
@@ -76,25 +75,9 @@ struct CraveSearchSection: View {
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(isFocused ? Color.lPlum.opacity(0.4) : Color.lRule, lineWidth: 1))
 
-                // Idea chips + footnote (always visible unless showing results or loading)
                 if recipes == nil && !loading {
-                    Spacer().frame(height: 14)
-                    FlowLayout(spacing: 6) {
-                        ForEach(ideas, id: \.self) { idea in
-                            Button { query = idea } label: {
-                                Text(idea)
-                                    .font(LFont.body(12))
-                                    .foregroundColor(.lInk2)
-                                    .padding(.horizontal, 11)
-                                    .padding(.vertical, 5)
-                                    .background(Color.clear)
-                                    .clipShape(Capsule())
-                                    .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
-                            }
-                        }
-                    }
                     Spacer().frame(height: 10)
-                    Text("Recipes will be tuned to your \(phase.name.lowercased()) phase\(appState.dailyLog.mood.map { " and feeling \($0.lowercased())" } ?? "").")
+                    Text("Tuned to your \(phase.name.lowercased()) phase\(appState.dailyLog.mood.map { " and feeling \($0.lowercased())" } ?? "").")
                         .font(LFont.body(12))
                         .foregroundColor(.lInk3)
                 }

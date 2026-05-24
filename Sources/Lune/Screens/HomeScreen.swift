@@ -250,6 +250,7 @@ struct HomeScreen: View {
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .bottom) {
+
                 VStack(alignment: .leading, spacing: 6) {
                     Eyebrow("Today")
                     DisplayLabel(text: "Nourishment", size: 22, italic: true)
@@ -270,6 +271,7 @@ struct HomeScreen: View {
                 .animation(.easeInOut(duration: 0.2), value: nourishmentRefreshed)
             }
             .padding(.bottom, 14)
+            .padding(.horizontal, 24)
 
             if appState.nourishmentLoading && appState.dailyNourishment.isEmpty {
                 HStack(spacing: 12) {
@@ -282,8 +284,8 @@ struct HomeScreen: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(20)
                 .cardStyle()
+                .padding(.horizontal, 24)
             } else if appState.dailyNourishment.isEmpty {
-                // Waiting for mood check-in
                 Text("Check in above and Ona will build your meals for the day.")
                     .font(LFont.body(14))
                     .foregroundColor(.lInk3)
@@ -291,15 +293,22 @@ struct HomeScreen: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(20)
                     .cardStyle()
+                    .padding(.horizontal, 24)
             } else {
-                VStack(spacing: 10) {
-                    ForEach(appState.dailyNourishment) { recipe in
-                        NourishmentCard(recipe: recipe, currentPhase: phase.name)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 12) {
+                        ForEach(appState.dailyNourishment) { recipe in
+                            NourishmentCard(recipe: recipe, currentPhase: phase.name)
+                                .frame(width: 300)
+                        }
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 2)
                 }
+                .frame(maxWidth: .infinity)
             }
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, 0)
     }
 
     // MARK: - Cycle history (saved recipes from this phase)
@@ -766,65 +775,61 @@ struct PhaseInfoSheet: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Spacer().frame(height: 80)
 
-                    if let detail = phaseDetails[phase.name] {
-                        Eyebrow(detail.days)
-                        Spacer().frame(height: 8)
-                        Text(phase.name)
-                            .font(LFont.display(34))
-                            .foregroundColor(.lInk)
+                    let detail = phaseDetails[phase.name]
 
-                        Spacer().frame(height: 28)
+                    Eyebrow(detail?.days ?? "")
+                    Spacer().frame(height: 8)
+                    Text(phase.name)
+                        .font(LFont.display(34))
+                        .foregroundColor(.lInk)
 
-                        // Hormones
-                        Eyebrow("What's happening")
-                        Spacer().frame(height: 10)
-                        Text(detail.hormones)
-                            .font(LFont.body(15))
-                            .foregroundColor(.lInk)
-                            .lineSpacing(5)
+                    Spacer().frame(height: 28)
 
-                        Spacer().frame(height: 28)
-                        Divider().background(Color.lRule)
-                        Spacer().frame(height: 28)
+                    Eyebrow("What's happening")
+                    Spacer().frame(height: 10)
+                    Text(detail?.hormones ?? "")
+                        .font(LFont.body(15))
+                        .foregroundColor(.lInk)
+                        .lineSpacing(5)
 
-                        // You might notice
-                        Eyebrow("You might notice")
-                        Spacer().frame(height: 12)
-                        VStack(alignment: .leading, spacing: 10) {
-                            ForEach(detail.youMightNotice, id: \.self) { item in
-                                HStack(alignment: .top, spacing: 12) {
-                                    Circle()
-                                        .fill(Color.phase(named: phase.name))
-                                        .frame(width: 5, height: 5)
-                                        .padding(.top, 7)
-                                    Text(item)
-                                        .font(LFont.body(15))
-                                        .foregroundColor(.lInk)
-                                        .lineSpacing(3)
-                                }
+                    Spacer().frame(height: 28)
+                    Divider().background(Color.lRule)
+                    Spacer().frame(height: 28)
+
+                    Eyebrow("You might notice")
+                    Spacer().frame(height: 12)
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(detail?.youMightNotice ?? [], id: \.self) { item in
+                            HStack(alignment: .top, spacing: 12) {
+                                Circle()
+                                    .fill(Color.phase(named: phase.name))
+                                    .frame(width: 5, height: 5)
+                                    .padding(.top, 7)
+                                Text(item)
+                                    .font(LFont.body(15))
+                                    .foregroundColor(.lInk)
+                                    .lineSpacing(3)
                             }
                         }
+                    }
 
-                        Spacer().frame(height: 28)
-                        Divider().background(Color.lRule)
-                        Spacer().frame(height: 28)
+                    Spacer().frame(height: 28)
+                    Divider().background(Color.lRule)
+                    Spacer().frame(height: 28)
 
-                        // Nutrition
-                        Eyebrow("How to eat for it")
-                        Spacer().frame(height: 10)
-                        Text(detail.nutritionFocus)
-                            .font(LFont.body(15))
-                            .foregroundColor(.lInk)
-                            .lineSpacing(5)
+                    Eyebrow("How to eat for it")
+                    Spacer().frame(height: 10)
+                    Text(detail?.nutritionFocus ?? "")
+                        .font(LFont.body(15))
+                        .foregroundColor(.lInk)
+                        .lineSpacing(5)
 
-                        Spacer().frame(height: 20)
+                    Spacer().frame(height: 20)
 
-                        // Lean into foods
-                        if let foods = phaseFoods[phase.name] {
-                            FlowLayout(spacing: 8) {
-                                ForEach(foods, id: \.self) { food in
-                                    TagChip(label: food, background: .lCream)
-                                }
+                    if let foods = phaseFoods[phase.name] {
+                        FlowLayout(spacing: 8) {
+                            ForEach(foods, id: \.self) { food in
+                                TagChip(label: food, background: .lCream)
                             }
                         }
                     }
@@ -832,6 +837,7 @@ struct PhaseInfoSheet: View {
                     Spacer().frame(height: 60)
                 }
                 .padding(.horizontal, 24)
+                .frame(maxWidth: .infinity)
             }
 
             HStack {
@@ -860,6 +866,7 @@ struct PhaseInfoSheet: View {
                     .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
             )
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -1004,9 +1011,9 @@ struct CycleStripView: View {
                         .id(d)
                     }
                 }
-                .padding(.horizontal, 24)
                 .padding(.vertical, 4)
             }
+            .padding(.horizontal, 24)
             .frame(maxWidth: .infinity)
             .onAppear {
                 proxy.scrollTo(day, anchor: .center)
