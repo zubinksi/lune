@@ -18,6 +18,7 @@ struct HomeScreen: View {
     @State private var showSavedRecipes = false
     @State private var showPhaseInfo = false
     @State private var nourishmentRefreshed = false
+    @State private var phaseCardExpanded = false
 
     private var hasAPIKey: Bool {
         !(UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? "").isEmpty
@@ -158,37 +159,58 @@ struct HomeScreen: View {
         .padding(.bottom, 28)
     }
 
-    // MARK: - Phase explainer card
+    // MARK: - Phase explainer card (collapsible)
     var phaseCard: some View {
         let explainer = phaseExplainer[phase.name] ?? ""
         let foods = phaseFoods[phase.name] ?? []
 
-        return VStack(alignment: .leading, spacing: 0) {
-            Eyebrow("Why this phase matters", color: phaseColor)
-            Spacer().frame(height: 8)
+        return Button {
+            withAnimation(.easeInOut(duration: 0.22)) {
+                phaseCardExpanded.toggle()
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top) {
+                    Eyebrow("Why this phase matters", color: phaseColor)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundColor(.lInk3)
+                        .rotationEffect(.degrees(phaseCardExpanded ? 180 : 0))
+                        .animation(.easeInOut(duration: 0.22), value: phaseCardExpanded)
+                        .padding(.top, 1)
+                }
 
-            Text(explainer)
-                .font(LFont.body(14))
-                .foregroundColor(.lInk)
-                .lineSpacing(4)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Spacer().frame(height: 8)
 
-            Spacer().frame(height: 14)
-            Divider().background(Color.lRule)
-            Spacer().frame(height: 14)
+                Text(explainer)
+                    .font(LFont.body(14))
+                    .foregroundColor(.lInk)
+                    .lineSpacing(4)
+                    .lineLimit(phaseCardExpanded ? nil : 1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-            Eyebrow("Lean into")
-            Spacer().frame(height: 8)
-            FlowLayout(spacing: 6) {
-                ForEach(foods, id: \.self) { food in
-                    TagChip(label: food, background: .lCream)
+                if phaseCardExpanded {
+                    Spacer().frame(height: 14)
+                    Divider().background(Color.lRule)
+                    Spacer().frame(height: 14)
+
+                    Eyebrow("Lean into")
+                    Spacer().frame(height: 8)
+                    FlowLayout(spacing: 6) {
+                        ForEach(foods, id: \.self) { food in
+                            TagChip(label: food, background: .lCream)
+                        }
+                    }
                 }
             }
+            .padding(.horizontal, 22)
+            .padding(.vertical, 20)
+            .cardStyle()
         }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 20)
-        .cardStyle()
+        .buttonStyle(.plain)
         .padding(.horizontal, 24)
+        .animation(.easeInOut(duration: 0.22), value: phaseCardExpanded)
     }
 
     // MARK: - Mood check-in
