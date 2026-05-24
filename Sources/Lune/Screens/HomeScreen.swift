@@ -85,10 +85,10 @@ struct HomeScreen: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 0) {
                 Text(timeOfDayGreeting)
-                    .font(LFont.display(32))
+                    .font(LFont.display(26))
                     .foregroundColor(.lInk)
                 Text("\(appState.profile.name).")
-                    .font(LFont.display(32, italic: true))
+                    .font(LFont.display(26, italic: true))
                     .foregroundColor(.lInk)
             }
             .tracking(-0.4)
@@ -102,15 +102,15 @@ struct HomeScreen: View {
                         .foregroundColor(appState.savedRecipes.isEmpty ? .lInk2 : .lPlum)
                 }
                 Button { showSettings = true } label: {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 20, weight: .light))
+                    Image(systemName: "person.circle")
+                        .font(.system(size: 22, weight: .light))
                         .foregroundColor(.lInk2)
                 }
             }
-            .padding(.top, 8)
+            .padding(.top, 4)
         }
         .padding(.horizontal, 24)
-        .padding(.top, 70)
+        .padding(.top, 44)
         .padding(.bottom, 8)
     }
 
@@ -118,15 +118,15 @@ struct HomeScreen: View {
     var moonHero: some View {
         MoonView(
             phase: phase.phase,
-            size: 190,
+            size: 120,
             litColor: .lInk,
             darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
             showCraters: true,
             showGlow: false
         )
         .frame(maxWidth: .infinity)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
     }
 
     // MARK: - Phase name + cycle strip
