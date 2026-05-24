@@ -33,9 +33,7 @@ struct CraveSearchSection: View {
         VStack(alignment: .leading, spacing: 0) {
 
             // Section header
-            Eyebrow("Need or craving something?")
-            Spacer().frame(height: 6)
-            Text("Tell Ona")
+            Text("Tell Ona what you need")
                 .font(LFont.display(22, italic: true))
                 .foregroundColor(.lInk)
             Spacer().frame(height: 16)
@@ -77,6 +75,10 @@ struct CraveSearchSection: View {
 
                 if recipes == nil && !loading {
                     Spacer().frame(height: 10)
+                    Text("Share any needs or cravings to build a meal around.")
+                        .font(LFont.body(12))
+                        .foregroundColor(.lInk2)
+                    Spacer().frame(height: 4)
                     Text("Tuned to your \(phase.name.lowercased()) phase\(appState.dailyLog.mood.map { " and feeling \($0.lowercased())" } ?? "").")
                         .font(LFont.body(12))
                         .foregroundColor(.lInk3)

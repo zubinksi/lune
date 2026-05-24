@@ -171,7 +171,11 @@ struct HomeScreen: View {
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top) {
-                    Eyebrow("Why this phase matters", color: phaseColor)
+                    Text("Why this phase matters")
+                        .font(LFont.body(12, weight: .medium))
+                        .foregroundColor(phaseColor)
+                        .textCase(.uppercase)
+                        .tracking(0.8)
                     Spacer()
                     Image(systemName: "chevron.down")
                         .font(.system(size: 11, weight: .regular))
@@ -195,8 +199,6 @@ struct HomeScreen: View {
                     Divider().background(Color.lRule)
                     Spacer().frame(height: 14)
 
-                    Eyebrow("Lean into")
-                    Spacer().frame(height: 8)
                     FlowLayout(spacing: 6) {
                         ForEach(foods, id: \.self) { food in
                             TagChip(label: food, background: .lCream)
@@ -216,7 +218,7 @@ struct HomeScreen: View {
     // MARK: - Mood check-in
     var moodCheckIn: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "Today's check-in", title: "How are you feeling?")
+            SectionHeader(title: "How are you feeling today?")
 
             if appState.dailyLog.mood == nil {
                 BodyText(text: "Tell Ona how you feel and she'll shape today's meals around it.", size: 13)
@@ -274,8 +276,7 @@ struct HomeScreen: View {
             HStack(alignment: .bottom) {
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Eyebrow("Today")
-                    DisplayLabel(text: "Nourishment", size: 22, italic: true)
+                    DisplayLabel(text: "Daily nourishment", size: 22, italic: true)
                 }
                 Spacer()
                 Button {
@@ -340,7 +341,7 @@ struct HomeScreen: View {
         let phaseRecipes = appState.savedRecipes.filter { $0.phase == phase.name }
 
         return VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(eyebrow: "From last cycle")
+            SectionHeader(title: "From last cycle")
 
             ZStack(alignment: .topTrailing) {
                 Color.lInk
