@@ -26,7 +26,6 @@ struct HomeScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                greeting
                 phaseBar
                 phaseCard
                 divider(32)
@@ -74,70 +73,54 @@ struct HomeScreen: View {
         }
     }
 
-    // MARK: - Greeting (with inline settings icon)
-    var greeting: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 0) {
-                Text(timeOfDayGreeting)
-                    .font(LFont.display(26))
+    // MARK: - Phase bar (first content; greeting eyebrow + phase + icons)
+    var phaseBar: some View {
+        HStack(alignment: .center, spacing: 14) {
+            MoonView(
+                phase: phase.phase,
+                size: 48,
+                litColor: .lInk,
+                darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
+                showCraters: false,
+                showGlow: false
+            )
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("\(timeOfDayGreeting) \(appState.profile.name).")
+                    .font(LFont.body(12))
+                    .foregroundColor(.lInk3)
+
+                Text(phase.name)
+                    .font(LFont.display(22))
                     .foregroundColor(.lInk)
-                Text("\(appState.profile.name).")
-                    .font(LFont.display(26, italic: true))
-                    .foregroundColor(.lInk)
+
+                Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
+                    .font(LFont.mono(11))
+                    .tracking(0.8)
+                    .foregroundColor(.lInk3)
+
+                Spacer().frame(height: 5)
+
+                FourPhaseStrip(currentDay: appState.cycleDay, cycleLength: appState.cycleLength)
             }
-            .tracking(-0.4)
 
             Spacer()
 
-            HStack(spacing: 16) {
+            VStack(spacing: 14) {
                 Button { showSavedRecipes = true } label: {
                     Image(systemName: appState.savedRecipes.isEmpty ? "bookmark" : "bookmark.fill")
-                        .font(.system(size: 18, weight: .light))
+                        .font(.system(size: 16, weight: .light))
                         .foregroundColor(appState.savedRecipes.isEmpty ? .lInk2 : .lPlum)
                 }
                 Button { showSettings = true } label: {
                     Image(systemName: "person.circle")
-                        .font(.system(size: 22, weight: .light))
+                        .font(.system(size: 20, weight: .light))
                         .foregroundColor(.lInk2)
                 }
             }
-            .padding(.top, 4)
         }
         .padding(.horizontal, 24)
-        .padding(.top, 44)
-        .padding(.bottom, 8)
-    }
-
-    // MARK: - Compact phase bar
-    var phaseBar: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 14) {
-                MoonView(
-                    phase: phase.phase,
-                    size: 44,
-                    litColor: .lInk,
-                    darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
-                    showCraters: false,
-                    showGlow: false
-                )
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(phase.name)
-                        .font(LFont.display(22))
-                        .foregroundColor(.lInk)
-                    Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
-                        .font(LFont.mono(11))
-                        .tracking(0.8)
-                        .foregroundColor(.lInk3)
-                }
-
-                Spacer()
-            }
-            .padding(.horizontal, 24)
-
-            CycleStripView(day: appState.cycleDay, length: appState.cycleLength)
-        }
-        .padding(.top, 8)
+        .padding(.top, 56)
         .padding(.bottom, 24)
     }
 
@@ -809,6 +792,58 @@ struct SavedRecipesLibrarySheet: View {
         .sheet(item: $selectedRecipe) { recipe in
             SavedRecipeSheet(recipe: recipe)
                 .environmentObject(appState)
+        }
+    }
+}
+
+// MARK: - Four-phase progress strip
+struct FourPhaseStrip: View {
+    let currentDay: Int
+    let cycleLength: Int
+
+    private struct Segment {
+        let start: Int
+        let end: Int
+    }
+
+    private var segments: [Segment] {
+        [
+            Segment(start: 1,  end: 5),
+            Segment(start: 6,  end: 13),
+            Segment(start: 14, end: 16),
+            Segment(start: 17, end: max(17, cycleLength)),
+        ]
+    }
+
+    private func isActive(_ s: Segment) -> Bool {
+        currentDay >= s.start && currentDay <= s.end
+    }
+
+    private func progress(_ s: Segment) -> Double {
+        guard isActive(s) else { return 0 }
+        let span = Double(s.end - s.start)
+        guard span > 0 else { return 1 }
+        return Double(currentDay - s.start) / span
+    }
+
+    var body: some View {
+        HStack(spacing: 5) {
+            ForEach(segments.indices, id: \.self) { i in
+                let s = segments[i]
+                let active = isActive(s)
+                let pillWidth: CGFloat = active ? 48 : 8
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.lInk.opacity(0.12))
+                        .frame(width: pillWidth, height: 6)
+                    if active {
+                        Capsule()
+                            .fill(Color.lInk)
+                            .frame(width: max(6, pillWidth * progress(s)), height: 6)
+                    }
+                }
+                .animation(.easeInOut(duration: 0.4), value: active)
+            }
         }
     }
 }
