@@ -1,5 +1,7 @@
 import SwiftUI
 
+enum NourishmentTab { case daily, crave }
+
 // MARK: - Home Screen
 struct HomeScreen: View {
     @EnvironmentObject var appState: AppState
@@ -16,8 +18,8 @@ struct HomeScreen: View {
 
     @State private var showSettings = false
     @State private var showSavedRecipes = false
-    @State private var nourishmentRefreshed = false
     @State private var phaseCardExpanded = false
+    @State private var nourishmentTab: NourishmentTab = .daily
 
     private var hasAPIKey: Bool {
         !(UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? "").isEmpty
@@ -32,10 +34,6 @@ struct HomeScreen: View {
                 moodCheckIn
                 divider(32)
                 nourishmentSection
-                if hasAPIKey {
-                    divider(32)
-                    CraveSearchSection()
-                }
                 divider(32)
                 partnerShare
                 divider(24)
@@ -51,9 +49,6 @@ struct HomeScreen: View {
                 Task { await appState.loadDailyNourishment() }
             }
         }
-        .onChange(of: appState.nourishmentLoading) { _, isLoading in
-            if !isLoading { nourishmentRefreshed = false }
-        }
         .sheet(isPresented: $showSavedRecipes) {
             SavedRecipesLibrarySheet()
                 .environmentObject(appState)
@@ -61,15 +56,6 @@ struct HomeScreen: View {
         .sheet(isPresented: $showSettings) {
             SettingsScreen()
                 .environmentObject(appState)
-        }
-    }
-
-    private var timeOfDayGreeting: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 0..<12: return "Good morning,"
-        case 12..<17: return "Good afternoon,"
-        default: return "Good evening,"
         }
     }
 
@@ -228,57 +214,86 @@ struct HomeScreen: View {
     // MARK: - Nourishment
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .bottom) {
-
-                VStack(alignment: .leading, spacing: 6) {
-                    DisplayLabel(text: "Daily nourishment", size: 22, italic: true)
+            // Tab toggle header
+            HStack(alignment: .center, spacing: 0) {
+                HStack(spacing: 2) {
+                    tabPill("Today's meals", tab: .daily)
+                    if hasAPIKey {
+                        tabPill("Crave something", tab: .crave)
+                    }
                 }
+                .padding(3)
+                .background(Color.lCream2)
+                .clipShape(Capsule())
+
                 Spacer()
+
                 Button { showSavedRecipes = true } label: {
                     Image(systemName: appState.savedRecipes.isEmpty ? "bookmark" : "bookmark.fill")
                         .font(.system(size: 16, weight: .light))
                         .foregroundColor(appState.savedRecipes.isEmpty ? .lInk2 : .lPlum)
                 }
             }
-            .padding(.bottom, 14)
+            .padding(.bottom, 16)
             .padding(.horizontal, 24)
 
-            if appState.nourishmentLoading && appState.dailyNourishment.isEmpty {
-                HStack(spacing: 12) {
-                    SpinnerView()
-                    Text("Preparing today's meals…")
-                        .font(LFont.body(14))
-                        .italic()
-                        .foregroundColor(.lInk2)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
-                .cardStyle()
-                .padding(.horizontal, 24)
-            } else if appState.dailyNourishment.isEmpty {
-                Text("Check in above and Ona will build your meals for the day.")
-                    .font(LFont.body(14))
-                    .foregroundColor(.lInk3)
-                    .lineSpacing(3)
+            // Tab content
+            if nourishmentTab == .daily {
+                if appState.nourishmentLoading && appState.dailyNourishment.isEmpty {
+                    HStack(spacing: 12) {
+                        SpinnerView()
+                        Text("Preparing today's meals…")
+                            .font(LFont.body(14))
+                            .italic()
+                            .foregroundColor(.lInk2)
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(20)
                     .cardStyle()
                     .padding(.horizontal, 24)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 12) {
-                        ForEach(appState.dailyNourishment) { recipe in
-                            NourishmentCard(recipe: recipe, currentPhase: phase.name)
-                                .frame(width: 300)
+                } else if appState.dailyNourishment.isEmpty {
+                    Text("Check in above and Ona will build your meals for the day.")
+                        .font(LFont.body(14))
+                        .foregroundColor(.lInk3)
+                        .lineSpacing(3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(20)
+                        .cardStyle()
+                        .padding(.horizontal, 24)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 12) {
+                            ForEach(appState.dailyNourishment) { recipe in
+                                NourishmentCard(recipe: recipe, currentPhase: phase.name)
+                                    .frame(width: 300)
+                            }
                         }
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 2)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 2)
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+            } else {
+                CraveSearchSection(embedded: true)
+                    .padding(.horizontal, 24)
             }
         }
-        .padding(.horizontal, 0)
+        .animation(.easeInOut(duration: 0.18), value: nourishmentTab)
+    }
+
+    private func tabPill(_ label: String, tab: NourishmentTab) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { nourishmentTab = tab }
+        } label: {
+            Text(label)
+                .font(LFont.body(12, weight: .medium))
+                .foregroundColor(nourishmentTab == tab ? .lInk : .lInk3)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(nourishmentTab == tab ? Color.lPaper : Color.clear)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Partner share

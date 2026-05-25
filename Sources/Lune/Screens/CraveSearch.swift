@@ -18,6 +18,7 @@ struct RecipeResponse: Codable {
 
 struct CraveSearchSection: View {
     @EnvironmentObject var appState: AppState
+    var embedded: Bool = false
     @State private var query = ""
     @State private var loading = false
     @State private var recipes: [GeneratedRecipeData]? = nil
@@ -31,12 +32,6 @@ struct CraveSearchSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-
-            // Section header
-            Text("Tell Ona what you need")
-                .font(LFont.display(22, italic: true))
-                .foregroundColor(.lInk)
-            Spacer().frame(height: 16)
 
             // Card
             VStack(alignment: .leading, spacing: 0) {
@@ -149,7 +144,7 @@ struct CraveSearchSection: View {
             .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(Color.lRule, lineWidth: 1))
         }
-        .padding(.horizontal, 24)
+        .padding(.horizontal, embedded ? 0 : 24)
         .animation(.easeInOut(duration: 0.2), value: loading)
         .animation(.easeInOut(duration: 0.2), value: recipes == nil)
     }
