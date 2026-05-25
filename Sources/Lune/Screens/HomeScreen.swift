@@ -155,14 +155,15 @@ struct HomeScreen: View {
 
                     FlowLayout(spacing: 6) {
                         ForEach(foods, id: \.self) { food in
-                            TagChip(label: food, background: .lCream)
+                            TagChip(label: food, background: phaseColor.opacity(0.12))
                         }
                     }
                 }
             }
             .padding(.horizontal, 22)
             .padding(.vertical, 20)
-            .cardStyle()
+            .background(phaseColor.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 24)
