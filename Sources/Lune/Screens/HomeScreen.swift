@@ -86,10 +86,6 @@ struct HomeScreen: View {
             )
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("\(timeOfDayGreeting) \(appState.profile.name).")
-                    .font(LFont.body(12))
-                    .foregroundColor(.lInk3)
-
                 Text(phase.name)
                     .font(LFont.display(22))
                     .foregroundColor(.lInk)
@@ -106,17 +102,10 @@ struct HomeScreen: View {
 
             Spacer()
 
-            VStack(spacing: 14) {
-                Button { showSavedRecipes = true } label: {
-                    Image(systemName: appState.savedRecipes.isEmpty ? "bookmark" : "bookmark.fill")
-                        .font(.system(size: 16, weight: .light))
-                        .foregroundColor(appState.savedRecipes.isEmpty ? .lInk2 : .lPlum)
-                }
-                Button { showSettings = true } label: {
-                    Image(systemName: "person.circle")
-                        .font(.system(size: 20, weight: .light))
-                        .foregroundColor(.lInk2)
-                }
+            Button { showSettings = true } label: {
+                Image(systemName: "person.circle")
+                    .font(.system(size: 20, weight: .light))
+                    .foregroundColor(.lInk2)
             }
         }
         .padding(.horizontal, 24)
@@ -183,7 +172,7 @@ struct HomeScreen: View {
     // MARK: - Mood check-in
     var moodCheckIn: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(title: "How are you feeling today?")
+            SectionHeader(title: "\(appState.profile.name), how are you feeling?")
 
             if appState.dailyLog.mood == nil {
                 BodyText(text: "Ona will shape meals around how you feel.", size: 13)
@@ -244,19 +233,11 @@ struct HomeScreen: View {
                     DisplayLabel(text: "Daily nourishment", size: 22, italic: true)
                 }
                 Spacer()
-                Button {
-                    appState.clearNourishmentCache()
-                    nourishmentRefreshed = true
-                    if appState.dailyLog.mood != nil {
-                        Task { await appState.loadDailyNourishment() }
-                    }
-                } label: {
-                    Image(systemName: nourishmentRefreshed ? "checkmark" : "arrow.clockwise")
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(nourishmentRefreshed ? .lSageDeep : .lInk3)
+                Button { showSavedRecipes = true } label: {
+                    Image(systemName: appState.savedRecipes.isEmpty ? "bookmark" : "bookmark.fill")
+                        .font(.system(size: 16, weight: .light))
+                        .foregroundColor(appState.savedRecipes.isEmpty ? .lInk2 : .lPlum)
                 }
-                .disabled(appState.nourishmentLoading)
-                .animation(.easeInOut(duration: 0.2), value: nourishmentRefreshed)
             }
             .padding(.bottom, 14)
             .padding(.horizontal, 24)
