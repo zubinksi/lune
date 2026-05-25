@@ -27,8 +27,7 @@ struct HomeScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 greeting
-                moonHero
-                phaseNameAndStrip
+                phaseBar
                 phaseCard
                 divider(32)
                 moodCheckIn
@@ -109,40 +108,37 @@ struct HomeScreen: View {
         .padding(.bottom, 8)
     }
 
-    // MARK: - Large moon
-    var moonHero: some View {
-        MoonView(
-            phase: phase.phase,
-            size: 120,
-            litColor: .lInk,
-            darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
-            showCraters: true,
-            showGlow: false
-        )
-        .frame(maxWidth: .infinity)
-        .padding(.top, 8)
-        .padding(.bottom, 4)
-    }
+    // MARK: - Compact phase bar
+    var phaseBar: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 14) {
+                MoonView(
+                    phase: phase.phase,
+                    size: 44,
+                    litColor: .lInk,
+                    darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
+                    showCraters: false,
+                    showGlow: false
+                )
 
-    // MARK: - Phase name + cycle strip
-    var phaseNameAndStrip: some View {
-        VStack(spacing: 6) {
-            Text(phase.name)
-                .font(LFont.display(32))
-                .foregroundColor(.lInk)
-                .frame(maxWidth: .infinity, alignment: .center)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(phase.name)
+                        .font(LFont.display(22))
+                        .foregroundColor(.lInk)
+                    Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
+                        .font(LFont.mono(11))
+                        .tracking(0.8)
+                        .foregroundColor(.lInk3)
+                }
 
-            Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
-                .font(LFont.mono(12))
-                .tracking(0.8)
-                .foregroundColor(.lInk3)
-                .frame(maxWidth: .infinity, alignment: .center)
-
-            Spacer().frame(height: 10)
+                Spacer()
+            }
+            .padding(.horizontal, 24)
 
             CycleStripView(day: appState.cycleDay, length: appState.cycleLength)
         }
-        .padding(.bottom, 28)
+        .padding(.top, 8)
+        .padding(.bottom, 24)
     }
 
     // MARK: - Phase explainer card (collapsible)
