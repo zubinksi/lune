@@ -53,9 +53,13 @@ struct HomeScreen: View {
 
             // Fixed profile button — always visible regardless of scroll
             Button { showSettings = true } label: {
-                Image(systemName: "person.circle")
-                    .font(.system(size: 22, weight: .light))
-                    .foregroundColor(.lInk2)
+                Text(appState.profile.name.prefix(1).uppercased())
+                    .font(LFont.display(15))
+                    .foregroundColor(phaseColor)
+                    .frame(width: 32, height: 32)
+                    .background(phaseColor.opacity(0.12))
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(phaseColor.opacity(0.3), lineWidth: 1))
             }
             .padding(.top, 56)
             .padding(.trailing, 24)
