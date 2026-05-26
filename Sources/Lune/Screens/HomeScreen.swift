@@ -20,9 +20,13 @@ struct HomeScreen: View {
     @State private var showSavedRecipes = false
     @State private var nourishmentTab: NourishmentTab = .daily
 
+    private var hasProxy: Bool {
+        !ProxyConfig.proxyURL.contains("your-subdomain")
+    }
     private var hasAPIKey: Bool {
         !(UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? "").isEmpty
     }
+    private var aiEnabled: Bool { hasProxy || hasAPIKey }
 
     var body: some View {
         ScrollView {
@@ -217,9 +221,9 @@ struct HomeScreen: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 14)
 
-            // Text-only tab toggle
-            if hasAPIKey {
-                HStack(spacing: 0) {
+            // Outlined pill toggle
+            if aiEnabled {
+                HStack(spacing: 8) {
                     tabPill("Today's meals", tab: .daily)
                     tabPill("Craving something?", tab: .crave)
                 }
@@ -276,16 +280,14 @@ struct HomeScreen: View {
         return Button {
             withAnimation(.easeInOut(duration: 0.2)) { nourishmentTab = tab }
         } label: {
-            VStack(spacing: 5) {
-                Text(label)
-                    .font(LFont.body(13, weight: active ? .medium : .regular))
-                    .foregroundColor(active ? .lInk : .lInk3)
-                Circle()
-                    .fill(active ? phaseColor : Color.clear)
-                    .frame(width: 4, height: 4)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
+            Text(label)
+                .font(LFont.body(13, weight: active ? .medium : .regular))
+                .foregroundColor(active ? .lCream : .lInk3)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(active ? phaseColor : Color.clear)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(active ? phaseColor : Color.lRule, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: active)
