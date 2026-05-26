@@ -225,7 +225,7 @@ struct HomeScreen: View {
             if aiEnabled {
                 HStack(alignment: .bottom, spacing: 24) {
                     tabHeader("Today's meals", tab: .daily)
-                    tabHeader("Craving something?", tab: .crave)
+                    tabHeader("Tell Ona", tab: .crave)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 20)
