@@ -231,7 +231,7 @@ struct HomeScreen: View {
                 .padding(.bottom, 20)
             } else {
                 Text("Today's meals")
-                    .font(LFont.display(26))
+                    .font(LFont.display(22))
                     .foregroundColor(.lInk)
                     .padding(.horizontal, 24)
                     .padding(.bottom, 20)
@@ -311,7 +311,7 @@ struct HomeScreen: View {
         } label: {
             VStack(alignment: .leading, spacing: 6) {
                 Text(label)
-                    .font(LFont.display(26))
+                    .font(LFont.display(22))
                     .foregroundColor(active ? .lInk : .lInk3)
                 Rectangle()
                     .fill(active ? phaseColor : Color.clear)
