@@ -349,30 +349,43 @@ struct GeneratedRecipeCard: View {
 
                         Spacer().frame(height: 14)
 
-                        Button {
-                            if !isSaved {
-                                let r = Recipe(
-                                    name: recipe.name,
-                                    time: recipe.time,
-                                    why: recipe.why,
-                                    ingredients: recipe.ingredients,
-                                    steps: recipe.steps,
-                                    icon: "leaf",
-                                    phase: currentPhase
-                                )
-                                appState.savedRecipes.append(r)
-                                isSaved = true
+                        HStack(spacing: 8) {
+                            Button {
+                                if !isSaved {
+                                    let r = Recipe(
+                                        name: recipe.name,
+                                        time: recipe.time,
+                                        why: recipe.why,
+                                        ingredients: recipe.ingredients,
+                                        steps: recipe.steps,
+                                        icon: "leaf",
+                                        phase: currentPhase
+                                    )
+                                    appState.savedRecipes.append(r)
+                                    isSaved = true
+                                }
+                            } label: {
+                                Text(isSaved ? "Saved ✓" : "Save recipe")
+                                    .font(LFont.body(13, weight: .medium))
+                                    .foregroundColor(.lCream)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 38)
+                                    .background(isSaved ? Color.lSageDeep : Color.lPlum)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             }
-                        } label: {
-                            Text(isSaved ? "Saved ✓" : "Save recipe")
-                                .font(LFont.body(13, weight: .medium))
-                                .foregroundColor(.lCream)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 38)
-                                .background(isSaved ? Color.lSageDeep : Color.lPlum)
-                                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .animation(.easeInOut(duration: 0.2), value: isSaved)
+
+                            ShareLink(item: generatedRecipeShareText(recipe)) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.system(size: 14, weight: .regular))
+                                    .foregroundColor(.lInk2)
+                                    .frame(width: 38, height: 38)
+                                    .background(Color.lCream2)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .stroke(Color.lRule, lineWidth: 1))
+                            }
                         }
-                        .animation(.easeInOut(duration: 0.2), value: isSaved)
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 18)
@@ -386,6 +399,24 @@ struct GeneratedRecipeCard: View {
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.lRule, lineWidth: 1))
         .clipped()
     }
+}
+
+// MARK: - Share text helper
+func generatedRecipeShareText(_ recipe: GeneratedRecipeData) -> String {
+    var lines: [String] = []
+    lines.append(recipe.name)
+    if !recipe.time.isEmpty { lines.append(recipe.time) }
+    if !recipe.why.isEmpty { lines.append("\n\(recipe.why)") }
+    if !recipe.ingredients.isEmpty {
+        lines.append("\nIngredients:")
+        lines.append(contentsOf: recipe.ingredients.map { "• \($0)" })
+    }
+    if !recipe.steps.isEmpty {
+        lines.append("\nSteps:")
+        lines.append(contentsOf: recipe.steps.enumerated().map { "\($0.offset + 1). \($0.element)" })
+    }
+    lines.append("\n— Shared from Ona")
+    return lines.joined(separator: "\n")
 }
 
 // MARK: - Spinner

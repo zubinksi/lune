@@ -586,6 +586,20 @@ struct NourishmentCard: View {
                             }
                         }
                     }
+
+                    Spacer().frame(height: 16)
+                    Divider().background(Color.lRule)
+                    Spacer().frame(height: 12)
+
+                    ShareLink(item: recipeShareText(recipe)) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 12, weight: .regular))
+                            Text("Share recipe")
+                                .font(LFont.body(13))
+                        }
+                        .foregroundColor(.lInk2)
+                    }
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
@@ -661,6 +675,24 @@ struct SavedRecipeSheet: View {
                         }
                         Spacer().frame(height: 28)
                     }
+
+                    ShareLink(item: recipeShareText(recipe)) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 13, weight: .regular))
+                            Text("Share recipe")
+                                .font(LFont.body(13))
+                        }
+                        .foregroundColor(.lInk2)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .background(Color.lPaper)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.lRule, lineWidth: 1))
+                    }
+
+                    Spacer().frame(height: 10)
 
                     Button {
                         appState.savedRecipes.removeAll { $0.name == recipe.name }
@@ -820,6 +852,24 @@ struct SavedRecipesLibrarySheet: View {
         }
         .presentationBackground(Color.lCream)
     }
+}
+
+// MARK: - Recipe share text
+func recipeShareText(_ recipe: Recipe) -> String {
+    var lines: [String] = []
+    lines.append(recipe.name)
+    if !recipe.time.isEmpty { lines.append(recipe.time) }
+    if !recipe.why.isEmpty { lines.append("\n\(recipe.why)") }
+    if !recipe.ingredients.isEmpty {
+        lines.append("\nIngredients:")
+        lines.append(contentsOf: recipe.ingredients.map { "• \($0)" })
+    }
+    if !recipe.steps.isEmpty {
+        lines.append("\nSteps:")
+        lines.append(contentsOf: recipe.steps.enumerated().map { "\($0.offset + 1). \($0.element)" })
+    }
+    lines.append("\n— Shared from Ona")
+    return lines.joined(separator: "\n")
 }
 
 // MARK: - Four-phase progress strip
