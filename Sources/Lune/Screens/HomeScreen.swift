@@ -176,16 +176,16 @@ struct HomeScreen: View {
                 HStack {
                     Text(moodResponse(mood))
                         .font(LFont.body(13))
-                        .foregroundColor(phaseColor)
+                        .foregroundColor(.lInk2)
                         .lineSpacing(3)
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(phaseColor.opacity(0.08))
+                .background(Color.lPaper)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(phaseColor.opacity(0.2), lineWidth: 1))
+                    .stroke(Color.lRule, lineWidth: 1))
                 .padding(.top, 14)
                 .transition(.opacity)
             }
@@ -314,7 +314,7 @@ struct HomeScreen: View {
                     .font(LFont.display(22))
                     .foregroundColor(active ? .lInk : .lInk3)
                 Rectangle()
-                    .fill(active ? phaseColor : Color.clear)
+                    .fill(active ? Color.lInk : Color.clear)
                     .frame(height: 2)
                     .clipShape(Capsule())
             }
