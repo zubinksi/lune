@@ -18,7 +18,6 @@ struct HomeScreen: View {
 
     @State private var showSettings = false
     @State private var showSavedRecipes = false
-    @State private var phaseCardExpanded = false
     @State private var nourishmentTab: NourishmentTab = .daily
 
     private var hasAPIKey: Bool {
@@ -26,43 +25,28 @@ struct HomeScreen: View {
     }
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    phaseBar
-                    phaseCard
-                    divider(32)
-                    moodCheckIn
-                    divider(32)
-                    nourishmentSection
-                    divider(32)
-                    partnerShare
-                    divider(24)
-                    footer
-                    Spacer().frame(height: 60)
-                }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                phaseBar
+                phaseCard
+                divider(32)
+                moodCheckIn
+                divider(32)
+                nourishmentSection
+                divider(32)
+                partnerShare
+                divider(24)
+                footer
+                Spacer().frame(height: 60)
             }
-            .scrollDismissesKeyboard(.interactively)
-            .background(Color.lCream.ignoresSafeArea())
-            .onAppear {
-                refreshIfNeeded()
-                if appState.dailyLog.mood != nil && appState.dailyNourishment.isEmpty {
-                    Task { await appState.loadDailyNourishment() }
-                }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .background(Color.lCream.ignoresSafeArea())
+        .onAppear {
+            refreshIfNeeded()
+            if appState.dailyLog.mood != nil && appState.dailyNourishment.isEmpty {
+                Task { await appState.loadDailyNourishment() }
             }
-
-            // Fixed profile button — always visible regardless of scroll
-            Button { showSettings = true } label: {
-                Text(appState.profile.name.prefix(1).uppercased())
-                    .font(LFont.display(15))
-                    .foregroundColor(phaseColor)
-                    .frame(width: 32, height: 32)
-                    .background(phaseColor.opacity(0.12))
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(phaseColor.opacity(0.3), lineWidth: 1))
-            }
-            .padding(.top, 56)
-            .padding(.trailing, 24)
         }
         .sheet(isPresented: $showSavedRecipes) {
             SavedRecipesLibrarySheet()
@@ -102,77 +86,64 @@ struct HomeScreen: View {
                 FourPhaseStrip(currentDay: appState.cycleDay, cycleLength: appState.cycleLength)
             }
 
+            Spacer()
+
+            Button { showSettings = true } label: {
+                Text(appState.profile.name.prefix(1).uppercased())
+                    .font(LFont.display(15))
+                    .foregroundColor(phaseColor)
+                    .frame(width: 32, height: 32)
+                    .background(phaseColor.opacity(0.12))
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(phaseColor.opacity(0.3), lineWidth: 1))
+            }
         }
         .padding(.horizontal, 24)
         .padding(.top, 56)
         .padding(.bottom, 24)
     }
 
-    // MARK: - Phase explainer card (collapsible)
+    // MARK: - Phase explainer card (always open)
     var phaseCard: some View {
         let explainer = phaseExplainer[phase.name] ?? ""
         let foods = phaseFoods[phase.name] ?? []
 
-        return Button {
-            withAnimation(.easeInOut(duration: 0.22)) {
-                phaseCardExpanded.toggle()
-            }
-        } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .top) {
-                    Text("Why this phase matters")
-                        .font(LFont.body(12, weight: .medium))
-                        .foregroundColor(phaseColor)
-                        .textCase(.uppercase)
-                        .tracking(0.8)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .regular))
-                        .foregroundColor(.lInk3)
-                        .rotationEffect(.degrees(phaseCardExpanded ? 180 : 0))
-                        .animation(.easeInOut(duration: 0.22), value: phaseCardExpanded)
-                        .padding(.top, 1)
-                }
+        return VStack(alignment: .leading, spacing: 0) {
+            Text("Why this phase matters")
+                .font(LFont.body(12, weight: .medium))
+                .foregroundColor(phaseColor)
+                .textCase(.uppercase)
+                .tracking(0.8)
 
-                Spacer().frame(height: 8)
+            Spacer().frame(height: 8)
 
-                Text(explainer)
-                    .font(LFont.body(14))
-                    .foregroundColor(.lInk)
-                    .lineSpacing(4)
-                    .lineLimit(phaseCardExpanded ? nil : 1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            Text(explainer)
+                .font(LFont.body(14))
+                .foregroundColor(.lInk)
+                .lineSpacing(4)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                if phaseCardExpanded {
-                    Spacer().frame(height: 14)
-                    Divider().background(Color.lRule)
-                    Spacer().frame(height: 14)
+            Spacer().frame(height: 14)
+            Divider().background(Color.lRule)
+            Spacer().frame(height: 14)
 
-                    FlowLayout(spacing: 6) {
-                        ForEach(foods, id: \.self) { food in
-                            TagChip(label: food, background: phaseColor.opacity(0.12))
-                        }
-                    }
+            FlowLayout(spacing: 6) {
+                ForEach(foods, id: \.self) { food in
+                    TagChip(label: food, background: phaseColor.opacity(0.12))
                 }
             }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 20)
-            .background(phaseColor.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 22)
+        .padding(.vertical, 20)
+        .background(phaseColor.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .padding(.horizontal, 24)
-        .animation(.easeInOut(duration: 0.22), value: phaseCardExpanded)
     }
 
     // MARK: - Mood check-in
     var moodCheckIn: some View {
         VStack(alignment: .leading, spacing: 0) {
             SectionHeader(title: "\(appState.profile.name), how are you feeling?")
-
-            if appState.dailyLog.mood == nil {
-                Spacer().frame(height: 14)
-            }
 
             HStack(spacing: 8) {
                 ForEach(["Steady", "Tender", "Tired", "Bright", "Bloated"], id: \.self) { m in
@@ -190,16 +161,16 @@ struct HomeScreen: View {
                 HStack {
                     Text(moodResponse(mood))
                         .font(LFont.body(13))
-                        .foregroundColor(.lSageDeep)
+                        .foregroundColor(phaseColor)
                         .lineSpacing(3)
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(red: 138/255, green: 154/255, blue: 122/255).opacity(0.12))
+                .background(phaseColor.opacity(0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color(red: 138/255, green: 154/255, blue: 122/255).opacity(0.25), lineWidth: 1))
+                    .stroke(phaseColor.opacity(0.2), lineWidth: 1))
                 .padding(.top, 14)
                 .transition(.opacity)
             }
@@ -222,12 +193,17 @@ struct HomeScreen: View {
     // MARK: - Nourishment
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Section title
+            DisplayLabel(text: "Nourishment", size: 22, italic: true)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 14)
+
             // Tab toggle header
             HStack(alignment: .center, spacing: 0) {
                 HStack(spacing: 2) {
                     tabPill("Today's meals", tab: .daily)
                     if hasAPIKey {
-                        tabPill("Crave something", tab: .crave)
+                        tabPill("Craving something?", tab: .crave)
                     }
                 }
                 .padding(3)
