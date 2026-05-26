@@ -135,7 +135,7 @@ struct SettingsScreen: View {
                     // MARK: API Key
                     sectionLabel("AI Recommendations")
                     Spacer().frame(height: 6)
-                    BodyText(text: "Your Anthropic API key powers daily nourishment and recipe suggestions. It's stored only on this device.", size: 13)
+                    BodyText(text: "Ona uses a private AI service for recipe suggestions. If you have your own Anthropic API key, add it here to use it instead.", size: 13)
                     Spacer().frame(height: 16)
 
                     HStack(spacing: 0) {
@@ -167,15 +167,10 @@ struct SettingsScreen: View {
                     .background(Color.lPaper)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(apiKey.isEmpty ? Color.lRed.opacity(0.4) : Color.lRule, lineWidth: 1))
+                        .stroke(Color.lRule, lineWidth: 1))
 
-                    if apiKey.isEmpty {
-                        Text("Add your key to enable AI features.")
-                            .font(LFont.body(12))
-                            .foregroundColor(.lRed.opacity(0.7))
-                            .padding(.top, 6)
-                    } else {
-                        Text("Key saved ✓")
+                    if !apiKey.isEmpty {
+                        Text("Custom key saved ✓")
                             .font(LFont.body(12))
                             .foregroundColor(.lSageDeep)
                             .padding(.top, 6)

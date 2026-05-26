@@ -364,12 +364,41 @@ struct SpinnerView: View {
 
 // MARK: - Anthropic API call (shared with AppState for daily nourishment)
 func callAnthropic(prompt: String) async throws -> String {
+    // Try proxy first; fall back to direct API key if proxy URL is not configured
+    let proxyURL = ProxyConfig.proxyURL
+    let useProxy = !proxyURL.contains("your-subdomain")
+
+    if useProxy {
+        return try await callAnthropicViaProxy(prompt: prompt)
+    } else {
+        return try await callAnthropicDirect(prompt: prompt)
+    }
+}
+
+private func callAnthropicViaProxy(prompt: String) async throws -> String {
+    guard let url = URL(string: ProxyConfig.proxyURL) else { throw URLError(.badURL) }
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    if !ProxyConfig.proxySecret.isEmpty {
+        request.setValue(ProxyConfig.proxySecret, forHTTPHeaderField: "X-Ona-Secret")
+    }
+    request.httpBody = try JSONSerialization.data(withJSONObject: ["prompt": prompt])
+
+    let (data, _) = try await URLSession.shared.data(for: request)
+
+    struct Resp: Decodable { let text: String }
+    let resp = try JSONDecoder().decode(Resp.self, from: data)
+    return resp.text
+}
+
+private func callAnthropicDirect(prompt: String) async throws -> String {
     let apiKey = UserDefaults.standard.string(forKey: "anthropicAPIKey")
         ?? ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"]
         ?? ""
     guard !apiKey.isEmpty else {
         throw NSError(domain: "Ona", code: 0,
-                      userInfo: [NSLocalizedDescriptionKey: "ANTHROPIC_API_KEY not set"])
+                      userInfo: [NSLocalizedDescriptionKey: "No API key configured"])
     }
 
     var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
