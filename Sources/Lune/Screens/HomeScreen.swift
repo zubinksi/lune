@@ -64,11 +64,12 @@ struct HomeScreen: View {
         HStack(alignment: .center, spacing: 14) {
             MoonView(
                 phase: phase.phase,
-                size: 48,
+                size: 56,
                 litColor: .lInk,
                 darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
-                showCraters: false,
-                showGlow: false
+                showCraters: true,
+                showGlow: false,
+                craterColor: Color(red: 245/255, green: 240/255, blue: 232/255).opacity(0.3)
             )
 
             VStack(alignment: .leading, spacing: 3) {

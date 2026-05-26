@@ -111,6 +111,7 @@ struct MoonView: View {
     var darkColor: Color = .lInk
     var showCraters: Bool = true
     var showGlow: Bool = false
+    var craterColor: Color? = nil   // defaults to darkColor.opacity(0.18) if nil
 
     var body: some View {
         ZStack {
@@ -147,7 +148,7 @@ struct MoonView: View {
 
             // Craters (subtle, on lit side only when phase has lit area)
             if showCraters && phase > 0.005 {
-                CraterLayer(size: size, darkColor: darkColor)
+                CraterLayer(size: size, craterColor: craterColor ?? darkColor.opacity(0.18))
                     .clipShape(MoonLitShape(phase: phase))
                     .frame(width: size, height: size)
             }
@@ -162,7 +163,7 @@ struct MoonView: View {
 
 struct CraterLayer: View {
     let size: CGFloat
-    let darkColor: Color
+    let craterColor: Color
 
     var body: some View {
         Canvas { ctx, s in
@@ -176,7 +177,7 @@ struct CraterLayer: View {
                     x: (x - r) * scale, y: (y - r) * scale,
                     width: r * 2 * scale, height: r * 2 * scale
                 )
-                ctx.fill(Path(ellipseIn: rect), with: .color(darkColor.opacity(0.18)))
+                ctx.fill(Path(ellipseIn: rect), with: .color(craterColor))
             }
         }
         .frame(width: size, height: size)
