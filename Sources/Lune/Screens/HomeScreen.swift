@@ -27,6 +27,7 @@ struct HomeScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                profileHeader
                 phaseBar
                 phaseCard
                 divider(32)
@@ -58,7 +59,26 @@ struct HomeScreen: View {
         }
     }
 
-    // MARK: - Phase bar (first content; greeting eyebrow + phase + icons)
+    // MARK: - Profile header row (above moon strip)
+    var profileHeader: some View {
+        HStack {
+            Spacer()
+            Button { showSettings = true } label: {
+                Text(appState.profile.name.prefix(1).uppercased())
+                    .font(LFont.display(15))
+                    .foregroundColor(phaseColor)
+                    .frame(width: 32, height: 32)
+                    .background(phaseColor.opacity(0.12))
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(phaseColor.opacity(0.3), lineWidth: 1))
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 56)
+        .padding(.bottom, 10)
+    }
+
+    // MARK: - Phase bar (moon + phase name + strip)
     var phaseBar: some View {
         HStack(alignment: .center, spacing: 14) {
             MoonView(
@@ -87,19 +107,8 @@ struct HomeScreen: View {
             }
 
             Spacer()
-
-            Button { showSettings = true } label: {
-                Text(appState.profile.name.prefix(1).uppercased())
-                    .font(LFont.display(15))
-                    .foregroundColor(phaseColor)
-                    .frame(width: 32, height: 32)
-                    .background(phaseColor.opacity(0.12))
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(phaseColor.opacity(0.3), lineWidth: 1))
-            }
         }
         .padding(.horizontal, 24)
-        .padding(.top, 56)
         .padding(.bottom, 24)
     }
 
@@ -143,6 +152,8 @@ struct HomeScreen: View {
     // MARK: - Mood check-in
     var moodCheckIn: some View {
         VStack(alignment: .leading, spacing: 0) {
+            Eyebrow("Today's check-in")
+            Spacer().frame(height: 10)
             SectionHeader(title: "\(appState.profile.name), how are you feeling?")
 
             HStack(spacing: 8) {
