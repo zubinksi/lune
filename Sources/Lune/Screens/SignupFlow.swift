@@ -55,9 +55,8 @@ struct ProgressDots: View {
 let kSymptoms = ["Bloating", "Mood swings", "Cramping", "Cravings", "Sleeplessness", "Fatigue"]
 let kDiets = ["Vegetarian", "Vegan", "Pescatarian", "No dairy", "No nuts", "Gluten-free", "No eggs", "Low FODMAP"]
 let kCookingStyles = [
-    "Bold & spiced", "Bright & acidic", "Herb-forward", "Smoky & charred", "Warm & aromatic",
-    "Lots of vegetables", "Legume & grain heavy", "Seafood-forward",
-    "Slow-cooked & brothy", "Quick & high-heat", "One-pan, low-effort"
+    "Bold & spiced", "Bright & acidic", "Warm & aromatic",
+    "Legume & grain heavy", "Slow-cooked & brothy", "One-pan, low-effort"
 ]
 
 struct SignupSymptomsScreen: View {
