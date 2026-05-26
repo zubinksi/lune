@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Profile
 struct Profile: Codable {
-    var name: String = "Genesha"
+    var name: String = ""
     var symptoms: [String] = []
     var diet: [String] = []
     var cookingStyles: [String] = []

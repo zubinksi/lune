@@ -307,7 +307,7 @@ struct SignupNotesScreen: View {
 
                     Spacer().frame(height: 28)
 
-                    TextField("e.g. Genesha", text: $appState.profile.name)
+                    TextField("Your name", text: $appState.profile.name)
                         .font(LFont.body(15))
                         .foregroundColor(.lInk)
                         .padding(18)
