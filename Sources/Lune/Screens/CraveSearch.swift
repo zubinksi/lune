@@ -17,10 +17,34 @@ struct RecipeResponse: Codable {
 }
 
 private let phaseCravingSuggestions: [String: [String]] = [
-    "Menstrual":  ["dark chocolate", "ginger", "beets", "warming broth", "lentils"],
-    "Follicular": ["berries", "avocado", "eggs", "quinoa", "green tea"],
-    "Ovulatory":  ["cucumber", "flax seeds", "leafy greens", "raw salads", "watermelon"],
-    "Luteal":     ["sweet potato", "dark chocolate", "oats", "almonds", "pumpkin"],
+    "Menstrual":  [
+        "something warming and comforting",
+        "help with cramps",
+        "quick breakfast with dark chocolate",
+        "iron-rich midday meal",
+        "something sweet but nourishing",
+    ],
+    "Follicular": [
+        "light lunch to boost energy",
+        "something fresh and bright",
+        "morning snack with berries",
+        "help with skin glow",
+        "quick high-protein meal",
+    ],
+    "Ovulatory":  [
+        "cooling midday meal",
+        "vibrant salad ideas",
+        "snack before a workout",
+        "something with avocado",
+        "light evening meal",
+    ],
+    "Luteal":     [
+        "something sweet for dessert",
+        "midday snack with dates",
+        "help reduce bloating",
+        "mood-lifting comfort food",
+        "something with dark chocolate",
+    ],
 ]
 
 struct CraveSearchSection: View {
