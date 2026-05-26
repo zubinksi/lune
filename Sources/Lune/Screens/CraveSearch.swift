@@ -16,6 +16,13 @@ struct RecipeResponse: Codable {
     let recipes: [GeneratedRecipeData]
 }
 
+private let phaseCravingSuggestions: [String: [String]] = [
+    "Menstrual":  ["dark chocolate", "ginger", "beets", "warming broth", "lentils"],
+    "Follicular": ["berries", "avocado", "eggs", "quinoa", "green tea"],
+    "Ovulatory":  ["cucumber", "flax seeds", "leafy greens", "raw salads", "watermelon"],
+    "Luteal":     ["sweet potato", "dark chocolate", "oats", "almonds", "pumpkin"],
+]
+
 struct CraveSearchSection: View {
     @EnvironmentObject var appState: AppState
     var embedded: Bool = false
@@ -29,6 +36,7 @@ struct CraveSearchSection: View {
 
     private var phase: CyclePhaseInfo { appState.phaseInfo }
     private var isExpanded: Bool { isFocused || !query.isEmpty || recipes != nil || loading }
+    private var suggestions: [String] { phaseCravingSuggestions[phase.name] ?? [] }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -77,6 +85,26 @@ struct CraveSearchSection: View {
                     Text("Tuned to your \(phase.name.lowercased()) phase\(appState.dailyLog.mood.map { " and feeling \($0.lowercased())" } ?? "").")
                         .font(LFont.body(12))
                         .foregroundColor(.lInk3)
+
+                    Spacer().frame(height: 14)
+                    FlowLayout(spacing: 6) {
+                        ForEach(suggestions, id: \.self) { suggestion in
+                            Button {
+                                query = suggestion
+                                Task { await generate() }
+                            } label: {
+                                Text(suggestion)
+                                    .font(LFont.body(12))
+                                    .foregroundColor(.lInk2)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 7)
+                                    .background(Color.lCream)
+                                    .clipShape(Capsule())
+                                    .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
 
                 // Loading
