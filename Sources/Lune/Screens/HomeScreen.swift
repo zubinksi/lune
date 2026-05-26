@@ -158,7 +158,7 @@ struct HomeScreen: View {
         VStack(alignment: .leading, spacing: 0) {
             Eyebrow("Today's check-in")
             Spacer().frame(height: 10)
-            SectionHeader(title: "\(appState.profile.name), how are you feeling?")
+            SectionHeader(title: appState.profile.name.isEmpty ? "How are you feeling?" : "\(appState.profile.name), how are you feeling?")
 
             HStack(spacing: 8) {
                 ForEach(["Steady", "Tender", "Tired", "Bright", "Bloated"], id: \.self) { m in
