@@ -28,6 +28,7 @@ class AppState: ObservableObject {
     @Published var dailyNourishment: [Recipe] = []
     @Published var nourishmentLoading: Bool = false
     @Published var nourishmentDate: String = ""
+    @Published var nourishmentError: String? = nil
 
     private let defaults = UserDefaults.standard
     private let encoder = JSONEncoder()
@@ -144,6 +145,7 @@ class AppState: ObservableObject {
         guard nourishmentDate != today || dailyNourishment.isEmpty else { return }
 
         nourishmentLoading = true
+        nourishmentError = nil
 
         let phase = phaseInfo
         let symptoms = profile.symptoms.isEmpty ? "none" : profile.symptoms.joined(separator: ", ")
@@ -198,7 +200,7 @@ class AppState: ObservableObject {
             }
             nourishmentDate = today
         } catch {
-            // Fall back silently — HomeScreen shows static cards when dailyNourishment is empty
+            nourishmentError = error.localizedDescription
         }
 
         nourishmentLoading = false

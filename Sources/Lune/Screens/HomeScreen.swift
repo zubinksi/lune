@@ -251,6 +251,29 @@ struct HomeScreen: View {
                     .padding(20)
                     .cardStyle()
                     .padding(.horizontal, 24)
+                } else if let err = appState.nourishmentError {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Couldn't load meals")
+                            .font(LFont.body(13, weight: .medium))
+                            .foregroundColor(.lRed)
+                        Text(err)
+                            .font(LFont.body(12))
+                            .foregroundColor(.lRed.opacity(0.7))
+                            .lineSpacing(2)
+                        Button {
+                            appState.nourishmentError = nil
+                            Task { await appState.loadDailyNourishment() }
+                        } label: {
+                            Text("Try again")
+                                .font(LFont.body(12.5, weight: .medium))
+                                .foregroundColor(.lPlum)
+                        }
+                        .padding(.top, 2)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .cardStyle()
+                    .padding(.horizontal, 24)
                 } else if appState.dailyNourishment.isEmpty {
                     Text("Check in above and Ona will build your meals for the day.")
                         .font(LFont.body(14))

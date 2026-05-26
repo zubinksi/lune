@@ -392,15 +392,17 @@ struct SpinnerView: View {
 
 // MARK: - Anthropic API call (shared with AppState for daily nourishment)
 func callAnthropic(prompt: String) async throws -> String {
-    // Try proxy first; fall back to direct API key if proxy URL is not configured
-    let proxyURL = ProxyConfig.proxyURL
-    let useProxy = !proxyURL.contains("your-subdomain")
+    let proxyConfigured = !ProxyConfig.proxyURL.contains("your-subdomain")
 
-    if useProxy {
-        return try await callAnthropicViaProxy(prompt: prompt)
-    } else {
-        return try await callAnthropicDirect(prompt: prompt)
+    // Try proxy; if it fails or isn't configured, fall back to direct key
+    if proxyConfigured {
+        do {
+            return try await callAnthropicViaProxy(prompt: prompt)
+        } catch {
+            // Proxy failed — fall through to direct key
+        }
     }
+    return try await callAnthropicDirect(prompt: prompt)
 }
 
 private func callAnthropicViaProxy(prompt: String) async throws -> String {
@@ -413,8 +415,12 @@ private func callAnthropicViaProxy(prompt: String) async throws -> String {
     }
     request.httpBody = try JSONSerialization.data(withJSONObject: ["prompt": prompt])
 
-    let (data, _) = try await URLSession.shared.data(for: request)
-
+    let (data, response) = try await URLSession.shared.data(for: request)
+    if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+        let detail = String(data: data, encoding: .utf8) ?? ""
+        throw NSError(domain: "Ona", code: http.statusCode,
+                      userInfo: [NSLocalizedDescriptionKey: "Proxy error \(http.statusCode): \(detail)"])
+    }
     struct Resp: Decodable { let text: String }
     let resp = try JSONDecoder().decode(Resp.self, from: data)
     return resp.text
@@ -426,7 +432,7 @@ private func callAnthropicDirect(prompt: String) async throws -> String {
         ?? ""
     guard !apiKey.isEmpty else {
         throw NSError(domain: "Ona", code: 0,
-                      userInfo: [NSLocalizedDescriptionKey: "No API key configured"])
+                      userInfo: [NSLocalizedDescriptionKey: "No API key — add one in Settings or check the proxy setup."])
     }
 
     var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
