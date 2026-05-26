@@ -208,9 +208,9 @@ struct HomeScreen: View {
     // MARK: - Nourishment
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Section title + bookmark
+            // Eyebrow + bookmark
             HStack(alignment: .center) {
-                DisplayLabel(text: "Nourishment", size: 22, italic: true)
+                Eyebrow("Nourishment")
                 Spacer()
                 Button { showSavedRecipes = true } label: {
                     Image(systemName: appState.savedRecipes.isEmpty ? "bookmark" : "bookmark.fill")
@@ -219,16 +219,22 @@ struct HomeScreen: View {
                 }
             }
             .padding(.horizontal, 24)
-            .padding(.bottom, 14)
+            .padding(.bottom, 10)
 
-            // Outlined pill toggle
+            // Display-size tab headers
             if aiEnabled {
-                HStack(spacing: 8) {
-                    tabPill("Today's meals", tab: .daily)
-                    tabPill("Craving something?", tab: .crave)
+                HStack(alignment: .bottom, spacing: 24) {
+                    tabHeader("Today's meals", tab: .daily)
+                    tabHeader("Craving something?", tab: .crave)
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 16)
+                .padding(.bottom, 20)
+            } else {
+                Text("Today's meals")
+                    .font(LFont.display(26))
+                    .foregroundColor(.lInk)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 20)
             }
 
             // Tab content
@@ -275,19 +281,20 @@ struct HomeScreen: View {
         .animation(.easeInOut(duration: 0.18), value: nourishmentTab)
     }
 
-    private func tabPill(_ label: String, tab: NourishmentTab) -> some View {
+    private func tabHeader(_ label: String, tab: NourishmentTab) -> some View {
         let active = nourishmentTab == tab
         return Button {
             withAnimation(.easeInOut(duration: 0.2)) { nourishmentTab = tab }
         } label: {
-            Text(label)
-                .font(LFont.body(13, weight: active ? .medium : .regular))
-                .foregroundColor(active ? .lCream : .lInk3)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(active ? phaseColor : Color.clear)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(active ? phaseColor : Color.lRule, lineWidth: 1))
+            VStack(alignment: .leading, spacing: 6) {
+                Text(label)
+                    .font(LFont.display(26))
+                    .foregroundColor(active ? .lInk : .lInk3)
+                Rectangle()
+                    .fill(active ? phaseColor : Color.clear)
+                    .frame(height: 2)
+                    .clipShape(Capsule())
+            }
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: active)
