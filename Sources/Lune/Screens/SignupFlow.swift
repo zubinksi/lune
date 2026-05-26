@@ -22,7 +22,7 @@ struct SignupHeaderView: View {
 
             Spacer()
 
-            ProgressDots(step: step, total: 5)
+            ProgressDots(step: step, total: 4)
 
             Spacer()
 
@@ -324,102 +324,6 @@ struct SignupNotesScreen: View {
             VStack {
                 PillButton(label: "Continue") {
                     appState.advance()
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 12)
-            .padding(.bottom, 40)
-        }
-        .background(Color.lCream.ignoresSafeArea())
-    }
-}
-
-// MARK: - API Key step
-struct SignupAPIKeyScreen: View {
-    @EnvironmentObject var appState: AppState
-    @State private var apiKey: String = UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? ""
-    @State private var apiKeyVisible = false
-
-    var body: some View {
-        VStack(spacing: 0) {
-            SignupHeaderView(step: 4)
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    Eyebrow("Step 5 of 5")
-                    Spacer().frame(height: 12)
-
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("Power up")
-                            .font(LFont.display(36))
-                        Text("the AI.").font(LFont.display(36, italic: true))
-                    }
-                    .tracking(-0.4)
-                    .foregroundColor(.lInk)
-
-                    Spacer().frame(height: 12)
-
-                    BodyText(text: "Ona uses Anthropic's Claude to generate your daily nourishment and recipe suggestions. Add your API key to unlock these features.")
-
-                    Spacer().frame(height: 28)
-
-                    Eyebrow("Anthropic API key")
-                    Spacer().frame(height: 8)
-
-                    HStack(spacing: 0) {
-                        Group {
-                            if apiKeyVisible {
-                                TextField("sk-ant-...", text: $apiKey)
-                            } else {
-                                SecureField("sk-ant-...", text: $apiKey)
-                            }
-                        }
-                        .font(LFont.body(14))
-                        .foregroundColor(.lInk)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .onChange(of: apiKey) { _, val in
-                            UserDefaults.standard.set(val.trimmingCharacters(in: .whitespaces), forKey: "anthropicAPIKey")
-                        }
-
-                        Button {
-                            apiKeyVisible.toggle()
-                        } label: {
-                            Image(systemName: apiKeyVisible ? "eye.slash" : "eye")
-                                .font(.system(size: 14))
-                                .foregroundColor(.lInk3)
-                                .padding(.leading, 10)
-                        }
-                    }
-                    .padding(16)
-                    .background(Color.lPaper)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.lRule, lineWidth: 1))
-
-                    Spacer().frame(height: 8)
-                    Text("Your key is stored only on this device and never shared.")
-                        .font(LFont.body(12))
-                        .foregroundColor(.lInk3)
-
-                    Spacer().frame(height: 40)
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 32)
-            }
-
-            VStack(spacing: 12) {
-                PillButton(label: "Begin") {
-                    appState.advance()
-                }
-                Button {
-                    appState.advance()
-                } label: {
-                    Text("Skip for now")
-                        .font(LFont.body(13.5))
-                        .foregroundColor(.lInk3)
-                        .frame(maxWidth: .infinity)
-                        .padding(12)
                 }
             }
             .padding(.horizontal, 24)

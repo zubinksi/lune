@@ -129,16 +129,6 @@ struct ConnectScreen: View {
                     .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(Color.lRule, lineWidth: 1))
             }
-
-            Button {
-                appState.advance()
-            } label: {
-                Text("I'll set it up later")
-                    .font(LFont.body(13))
-                    .foregroundColor(.lInk3)
-                    .frame(maxWidth: .infinity)
-                    .padding(10)
-            }
         }
     }
 

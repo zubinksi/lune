@@ -23,7 +23,6 @@ struct RootView: View {
             case .signupDiet:          SignupDietScreen()
             case .signupCookingStyle:  SignupCookingStyleScreen()
             case .signupNotes:         SignupNotesScreen()
-            case .signupAPIKey:        SignupAPIKeyScreen()
             case .home:            HomeScreen()
             }
         }
