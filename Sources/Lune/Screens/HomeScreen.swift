@@ -162,8 +162,7 @@ struct HomeScreen: View {
             SectionHeader(title: "\(appState.profile.name), how are you feeling?")
 
             if appState.dailyLog.mood == nil {
-                BodyText(text: "Ona will shape meals around how you feel.", size: 13)
-                    .padding(.bottom, 14)
+                Spacer().frame(height: 14)
             }
 
             HStack(spacing: 8) {
