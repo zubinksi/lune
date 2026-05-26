@@ -206,15 +206,12 @@ struct HomeScreen: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 14)
 
-            // Full-width tab toggle
+            // Text-only tab toggle
             if hasAPIKey {
-                HStack(spacing: 2) {
+                HStack(spacing: 0) {
                     tabPill("Today's meals", tab: .daily)
                     tabPill("Craving something?", tab: .crave)
                 }
-                .padding(3)
-                .background(Color.lCream2)
-                .clipShape(Capsule())
                 .padding(.horizontal, 24)
                 .padding(.bottom, 16)
             }
@@ -264,18 +261,23 @@ struct HomeScreen: View {
     }
 
     private func tabPill(_ label: String, tab: NourishmentTab) -> some View {
-        Button {
+        let active = nourishmentTab == tab
+        return Button {
             withAnimation(.easeInOut(duration: 0.2)) { nourishmentTab = tab }
         } label: {
-            Text(label)
-                .font(LFont.body(12, weight: .medium))
-                .foregroundColor(nourishmentTab == tab ? .lInk : .lInk3)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 7)
-                .background(nourishmentTab == tab ? Color.lPaper : Color.clear)
-                .clipShape(Capsule())
+            VStack(spacing: 5) {
+                Text(label)
+                    .font(LFont.body(13, weight: active ? .medium : .regular))
+                    .foregroundColor(active ? .lInk : .lInk3)
+                Circle()
+                    .fill(active ? phaseColor : Color.clear)
+                    .frame(width: 4, height: 4)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
         }
         .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.2), value: active)
     }
 
     // MARK: - Partner share
@@ -344,7 +346,7 @@ struct MoodOptionButton: View {
                 .font(LFont.body(13))
                 .tracking(0.1)
                 .frame(maxWidth: .infinity)
-                .frame(height: 64)
+                .frame(height: 48)
                 .background(selected ? Color.lPlum : Color.lPaper)
                 .foregroundColor(selected ? .lCream : .lInk)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
