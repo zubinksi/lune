@@ -26,28 +26,39 @@ struct HomeScreen: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                phaseBar
-                phaseCard
-                divider(32)
-                moodCheckIn
-                divider(32)
-                nourishmentSection
-                divider(32)
-                partnerShare
-                divider(24)
-                footer
-                Spacer().frame(height: 60)
+        ZStack(alignment: .topTrailing) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    phaseBar
+                    phaseCard
+                    divider(32)
+                    moodCheckIn
+                    divider(32)
+                    nourishmentSection
+                    divider(32)
+                    partnerShare
+                    divider(24)
+                    footer
+                    Spacer().frame(height: 60)
+                }
             }
-        }
-        .scrollDismissesKeyboard(.interactively)
-        .background(Color.lCream.ignoresSafeArea())
-        .onAppear {
-            refreshIfNeeded()
-            if appState.dailyLog.mood != nil && appState.dailyNourishment.isEmpty {
-                Task { await appState.loadDailyNourishment() }
+            .scrollDismissesKeyboard(.interactively)
+            .background(Color.lCream.ignoresSafeArea())
+            .onAppear {
+                refreshIfNeeded()
+                if appState.dailyLog.mood != nil && appState.dailyNourishment.isEmpty {
+                    Task { await appState.loadDailyNourishment() }
+                }
             }
+
+            // Fixed profile button — always visible regardless of scroll
+            Button { showSettings = true } label: {
+                Image(systemName: "person.circle")
+                    .font(.system(size: 22, weight: .light))
+                    .foregroundColor(.lInk2)
+            }
+            .padding(.top, 56)
+            .padding(.trailing, 24)
         }
         .sheet(isPresented: $showSavedRecipes) {
             SavedRecipesLibrarySheet()
@@ -87,13 +98,6 @@ struct HomeScreen: View {
                 FourPhaseStrip(currentDay: appState.cycleDay, cycleLength: appState.cycleLength)
             }
 
-            Spacer()
-
-            Button { showSettings = true } label: {
-                Image(systemName: "person.circle")
-                    .font(.system(size: 20, weight: .light))
-                    .foregroundColor(.lInk2)
-            }
         }
         .padding(.horizontal, 24)
         .padding(.top, 56)
