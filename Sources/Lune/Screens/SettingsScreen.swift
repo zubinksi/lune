@@ -9,7 +9,7 @@ struct SettingsScreen: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Color.lCream.ignoresSafeArea()
+            Color.lCream.ignoresSafeArea(.all)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -362,6 +362,7 @@ struct SettingsScreen: View {
                     .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
             )
         }
+        .presentationBackground(Color.lCream)
     }
 
     // MARK: - Helpers

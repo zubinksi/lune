@@ -706,6 +706,7 @@ struct SavedRecipeSheet: View {
                     .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
             )
         }
+        .presentationBackground(Color.lCream)
     }
 }
 
@@ -817,6 +818,7 @@ struct SavedRecipesLibrarySheet: View {
             SavedRecipeSheet(recipe: recipe)
                 .environmentObject(appState)
         }
+        .presentationBackground(Color.lCream)
     }
 }
 
