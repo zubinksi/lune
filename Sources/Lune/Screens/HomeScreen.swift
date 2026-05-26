@@ -193,33 +193,31 @@ struct HomeScreen: View {
     // MARK: - Nourishment
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Section title
-            DisplayLabel(text: "Nourishment", size: 22, italic: true)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 14)
-
-            // Tab toggle header
-            HStack(alignment: .center, spacing: 0) {
-                HStack(spacing: 2) {
-                    tabPill("Today's meals", tab: .daily)
-                    if hasAPIKey {
-                        tabPill("Craving something?", tab: .crave)
-                    }
-                }
-                .padding(3)
-                .background(Color.lCream2)
-                .clipShape(Capsule())
-
+            // Section title + bookmark
+            HStack(alignment: .center) {
+                DisplayLabel(text: "Nourishment", size: 22, italic: true)
                 Spacer()
-
                 Button { showSavedRecipes = true } label: {
                     Image(systemName: appState.savedRecipes.isEmpty ? "bookmark" : "bookmark.fill")
                         .font(.system(size: 16, weight: .light))
                         .foregroundColor(appState.savedRecipes.isEmpty ? .lInk2 : .lPlum)
                 }
             }
-            .padding(.bottom, 16)
             .padding(.horizontal, 24)
+            .padding(.bottom, 14)
+
+            // Full-width tab toggle
+            if hasAPIKey {
+                HStack(spacing: 2) {
+                    tabPill("Today's meals", tab: .daily)
+                    tabPill("Craving something?", tab: .crave)
+                }
+                .padding(3)
+                .background(Color.lCream2)
+                .clipShape(Capsule())
+                .padding(.horizontal, 24)
+                .padding(.bottom, 16)
+            }
 
             // Tab content
             if nourishmentTab == .daily {
@@ -272,7 +270,7 @@ struct HomeScreen: View {
             Text(label)
                 .font(LFont.body(12, weight: .medium))
                 .foregroundColor(nourishmentTab == tab ? .lInk : .lInk3)
-                .padding(.horizontal, 14)
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, 7)
                 .background(nourishmentTab == tab ? Color.lPaper : Color.clear)
                 .clipShape(Capsule())
