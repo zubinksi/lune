@@ -4,8 +4,6 @@ struct SettingsScreen: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
     @State private var refreshed = false
-    @State private var apiKey: String = UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? ""
-    @State private var apiKeyVisible = false
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -129,52 +127,6 @@ struct SettingsScreen: View {
                     }
                     .animation(.easeInOut(duration: 0.2), value: refreshed)
                     .disabled(refreshed)
-
-                    rule(40)
-
-                    // MARK: API Key
-                    sectionLabel("AI Recommendations")
-                    Spacer().frame(height: 6)
-                    BodyText(text: "Ona uses a private AI service for recipe suggestions. If you have your own Anthropic API key, add it here to use it instead.", size: 13)
-                    Spacer().frame(height: 16)
-
-                    HStack(spacing: 0) {
-                        Group {
-                            if apiKeyVisible {
-                                TextField("sk-ant-...", text: $apiKey)
-                            } else {
-                                SecureField("sk-ant-...", text: $apiKey)
-                            }
-                        }
-                        .font(LFont.body(14))
-                        .foregroundColor(.lInk)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .onChange(of: apiKey) { _, val in
-                            UserDefaults.standard.set(val.trimmingCharacters(in: .whitespaces), forKey: "anthropicAPIKey")
-                        }
-
-                        Button {
-                            apiKeyVisible.toggle()
-                        } label: {
-                            Image(systemName: apiKeyVisible ? "eye.slash" : "eye")
-                                .font(.system(size: 14))
-                                .foregroundColor(.lInk3)
-                                .padding(.leading, 10)
-                        }
-                    }
-                    .padding(16)
-                    .background(Color.lPaper)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.lRule, lineWidth: 1))
-
-                    if !apiKey.isEmpty {
-                        Text("Custom key saved ✓")
-                            .font(LFont.body(12))
-                            .foregroundColor(.lSageDeep)
-                            .padding(.top, 6)
-                    }
 
                     rule(40)
 

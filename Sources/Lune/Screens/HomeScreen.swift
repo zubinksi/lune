@@ -99,7 +99,7 @@ struct HomeScreen: View {
             MoonView(
                 phase: phase.phase,
                 size: 112,
-                litColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.72),
+                litColor: Color(red: 42/255, green: 37/255, blue: 32/255),
                 darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
                 showCraters: true,
                 showGlow: false,
