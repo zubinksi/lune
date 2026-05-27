@@ -16,6 +16,17 @@ struct RecipeResponse: Codable {
     let recipes: [GeneratedRecipeData]
 }
 
+struct OnaResponse: Codable {
+    let type: String
+    let answer: String?
+    let recipes: [GeneratedRecipeData]?
+}
+
+enum OnaResult {
+    case answer(String)
+    case recipes([GeneratedRecipeData])
+}
+
 private let phaseCravingSuggestions: [String: [String]] = [
     "Menstrual":  [
         "help with cramps",
@@ -44,14 +55,14 @@ struct CraveSearchSection: View {
     var embedded: Bool = false
     @State private var query = ""
     @State private var loading = false
-    @State private var recipes: [GeneratedRecipeData]? = nil
+    @State private var result: OnaResult? = nil
     @State private var error: String? = nil
     @State private var submittedFor = ""
     @State private var expandedIndex: Int? = 0
     @FocusState private var isFocused: Bool
 
     private var phase: CyclePhaseInfo { appState.phaseInfo }
-    private var isExpanded: Bool { isFocused || !query.isEmpty || recipes != nil || loading }
+    private var isExpanded: Bool { isFocused || !query.isEmpty || result != nil || loading }
     private var suggestions: [String] { phaseCravingSuggestions[phase.name] ?? [] }
 
     var body: some View {
@@ -75,7 +86,7 @@ struct CraveSearchSection: View {
                     Button {
                         Task { await generate() }
                     } label: {
-                        Text(loading ? "…" : "Suggest")
+                        Text(loading ? "…" : "Go")
                             .font(LFont.body(13, weight: .medium))
                             .foregroundColor(canSubmit ? .lCream : .lInk3)
                             .padding(.horizontal, 14)
@@ -92,9 +103,9 @@ struct CraveSearchSection: View {
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(isFocused ? Color.lPlum.opacity(0.4) : Color.lRule, lineWidth: 1))
 
-                if recipes == nil && !loading {
+                if result == nil && !loading {
                     Spacer().frame(height: 10)
-                    Text("Share any needs or cravings to build a meal around.")
+                    Text("Ask a food question or share what you're craving.")
                         .font(LFont.body(12))
                         .foregroundColor(.lInk2)
                     Spacer().frame(height: 4)
@@ -150,30 +161,53 @@ struct CraveSearchSection: View {
                 }
 
                 // Results
-                if let r = recipes {
+                if let r = result {
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow("For \"\(submittedFor)\" · \(phase.name.lowercased())", color: .lSageDeep)
                             .padding(.top, 14)
-                        ForEach(r.indices, id: \.self) { i in
-                            GeneratedRecipeCard(
-                                recipe: r[i],
-                                currentPhase: phase.name,
-                                open: expandedIndex == i
-                            ) {
-                                withAnimation(.easeInOut(duration: 0.22)) {
-                                    expandedIndex = expandedIndex == i ? nil : i
+
+                        switch r {
+                        case .answer(let text):
+                            Text(text)
+                                .font(LFont.body(14))
+                                .foregroundColor(.lInk)
+                                .lineSpacing(3)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            ShareLink(item: text) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.system(size: 14, weight: .regular))
+                                    .foregroundColor(.lInk2)
+                                    .frame(width: 38, height: 38)
+                                    .background(Color.lCream2)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .stroke(Color.lRule, lineWidth: 1))
+                            }
+
+                        case .recipes(let recipes):
+                            ForEach(recipes.indices, id: \.self) { i in
+                                GeneratedRecipeCard(
+                                    recipe: recipes[i],
+                                    currentPhase: phase.name,
+                                    open: expandedIndex == i
+                                ) {
+                                    withAnimation(.easeInOut(duration: 0.22)) {
+                                        expandedIndex = expandedIndex == i ? nil : i
+                                    }
                                 }
                             }
                         }
+
                         Button {
                             withAnimation {
-                                recipes = nil
+                                result = nil
                                 query = ""
                                 submittedFor = ""
                                 isFocused = false
                             }
                         } label: {
-                            Text("← try another")
+                            Text("← ask something else")
                                 .font(LFont.body(12.5))
                                 .foregroundColor(.lInk3)
                         }
@@ -190,7 +224,7 @@ struct CraveSearchSection: View {
         }
         .padding(.horizontal, embedded ? 0 : 24)
         .animation(.easeInOut(duration: 0.2), value: loading)
-        .animation(.easeInOut(duration: 0.2), value: recipes == nil)
+        .animation(.easeInOut(duration: 0.2), value: result == nil)
     }
 
     private var canSubmit: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty && !loading }
@@ -202,7 +236,7 @@ struct CraveSearchSection: View {
 
         loading = true
         error = nil
-        recipes = nil
+        result = nil
         submittedFor = q
         expandedIndex = 0
 
@@ -220,7 +254,7 @@ struct CraveSearchSection: View {
         let season = appState.currentSeason()
 
         let prompt = """
-        You are a warm, knowledgeable nutritionist who designs recipes around the menstrual cycle.
+        You are Ona, a warm and knowledgeable nutritionist who understands the menstrual cycle deeply.
 
         Today's context:
         - Cycle phase: \(phase.name)
@@ -229,13 +263,21 @@ struct CraveSearchSection: View {
         - Symptoms she wants to address: \(symptoms)
         - Dietary preferences: \(diet)
         - Cooking style & flavour profile: \(cookingStyles)\(cookingStyleNotes.isEmpty ? "" : ". Additional: \(cookingStyleNotes)")
-        - She is craving / wants to use: \(q)
+        - Her message: \(q)
 
-        Suggest TWO simple, real recipes that center "\(q)" and are well-suited to her \(phase.name) phase and how she's feeling. Recipes should be doable in 30 minutes or less.
+        First decide: is this a question about food, nutrition, or her cycle? Or is it a request for recipe ideas?
 
-        Respond with ONLY a valid JSON object — no prose, no markdown, no code fences. Use this exact schema:
+        If it is a QUESTION, respond with a warm, specific answer (2–4 sentences) grounded in her current phase and how she feels.
+        If it is a RECIPE REQUEST, suggest TWO simple recipes (30 min or less) suited to her \(phase.name) phase.
 
+        Respond with ONLY a valid JSON object — no prose, no markdown, no code fences.
+
+        For a question:
+        { "type": "answer", "answer": "your response here" }
+
+        For recipes:
         {
+          "type": "recipes",
           "recipes": [
             {
               "name": "short evocative name (max 6 words)",
@@ -255,9 +297,17 @@ struct CraveSearchSection: View {
                 .replacingOccurrences(of: "```\\s*$", with: "", options: .regularExpression)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
-            let data = try JSONDecoder().decode(RecipeResponse.self, from: Data(cleaned.utf8))
-            guard data.recipes.count >= 1 else { throw URLError(.badServerResponse) }
-            recipes = data.recipes
+            let decoded = try JSONDecoder().decode(OnaResponse.self, from: Data(cleaned.utf8))
+            switch decoded.type {
+            case "answer":
+                guard let ans = decoded.answer, !ans.isEmpty else { throw URLError(.badServerResponse) }
+                result = .answer(ans)
+            case "recipes":
+                guard let r = decoded.recipes, !r.isEmpty else { throw URLError(.badServerResponse) }
+                result = .recipes(r)
+            default:
+                throw URLError(.badServerResponse)
+            }
         } catch {
             self.error = "Couldn't quite catch that — try again?"
         }
