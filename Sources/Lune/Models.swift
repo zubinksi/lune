@@ -99,10 +99,10 @@ let defaultRecipes: [String: [Recipe]] = [
 ]
 
 let phaseExplainer: [String: String] = [
-    "Menstrual": "Your body is shedding and resetting. Iron-rich, warming foods help replenish what's lost — think slow-cooked stews and dark leafy greens.",
-    "Follicular": "Estrogen is rising and so is your energy. Fresh, raw foods and light proteins support the building-up your body is doing.",
-    "Ovulatory": "Peak energy and warmth. Cooling, fibre-rich foods help process the natural rise in temperature and hormones.",
-    "Luteal": "Progesterone is climbing, which can mean bloating, cravings, and a tender mood. Magnesium-rich foods and warming spices help you ride the wave.",
+    "Menstrual": "Your body is shedding and resetting — a time for warmth and replenishment.",
+    "Follicular": "Estrogen is rising and so is your energy — a good time to build and experiment.",
+    "Ovulatory": "Peak energy and warmth — cooling, fibre-rich foods help you stay balanced.",
+    "Luteal": "Progesterone is climbing — magnesium-rich foods and warming spices help you ride the wave.",
 ]
 
 let phaseFoods: [String: [String]] = [

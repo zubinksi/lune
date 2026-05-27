@@ -19,7 +19,6 @@ struct HomeScreen: View {
     @State private var showSettings = false
     @State private var showSavedRecipes = false
     @State private var nourishmentTab: NourishmentTab = .daily
-    @State private var phaseCardExpanded = false
 
     private var hasProxy: Bool {
         !ProxyConfig.proxyURL.contains("your-subdomain")
@@ -34,7 +33,6 @@ struct HomeScreen: View {
             VStack(alignment: .leading, spacing: 0) {
                 profileHeader
                 phaseBar
-                phaseCard
                 divider(32)
                 moodCheckIn
                 divider(32)
@@ -115,6 +113,14 @@ struct HomeScreen: View {
                 .tracking(0.8)
                 .foregroundColor(.lInk3)
 
+            if let caption = phaseExplainer[phase.name] {
+                Text(caption)
+                    .font(LFont.body(13))
+                    .foregroundColor(.lInk2)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 12)
+            }
+
             Spacer().frame(height: 4)
 
             FourPhaseStrip(currentDay: appState.cycleDay, cycleLength: appState.cycleLength)
@@ -123,60 +129,6 @@ struct HomeScreen: View {
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
         .padding(.bottom, 24)
-    }
-
-    // MARK: - Phase explainer card (collapsible, default closed)
-    var phaseCard: some View {
-        let explainer = phaseExplainer[phase.name] ?? ""
-        let foods = phaseFoods[phase.name] ?? []
-
-        return Button {
-            withAnimation(.easeInOut(duration: 0.22)) { phaseCardExpanded.toggle() }
-        } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Text("Why this phase matters")
-                        .font(LFont.body(12, weight: .medium))
-                        .foregroundColor(phaseColor)
-                        .textCase(.uppercase)
-                        .tracking(0.8)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .regular))
-                        .foregroundColor(phaseColor.opacity(0.7))
-                        .rotationEffect(.degrees(phaseCardExpanded ? 180 : 0))
-                        .animation(.easeInOut(duration: 0.22), value: phaseCardExpanded)
-                }
-
-                if phaseCardExpanded {
-                    Spacer().frame(height: 12)
-
-                    Text(explainer)
-                        .font(LFont.body(14))
-                        .foregroundColor(.lInk)
-                        .lineSpacing(4)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .multilineTextAlignment(.leading)
-
-                    Spacer().frame(height: 14)
-                    Divider().background(Color.lRule)
-                    Spacer().frame(height: 14)
-
-                    FlowLayout(spacing: 6) {
-                        ForEach(foods, id: \.self) { food in
-                            TagChip(label: food, background: phaseColor.opacity(0.12))
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 18)
-            .background(phaseColor.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 24)
-        .animation(.easeInOut(duration: 0.22), value: phaseCardExpanded)
     }
 
     // MARK: - Mood check-in
