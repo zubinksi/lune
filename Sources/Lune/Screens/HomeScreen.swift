@@ -85,10 +85,10 @@ struct HomeScreen: View {
 
     // MARK: - Phase bar (moon + phase name + strip)
     var phaseBar: some View {
-        HStack(alignment: .center, spacing: 14) {
+        VStack(alignment: .center, spacing: 10) {
             MoonView(
                 phase: phase.phase,
-                size: 56,
+                size: 112,
                 litColor: .lInk,
                 darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
                 showCraters: true,
@@ -96,23 +96,21 @@ struct HomeScreen: View {
                 craterColor: Color(red: 245/255, green: 240/255, blue: 232/255).opacity(0.3)
             )
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(phase.name)
-                    .font(LFont.display(22))
-                    .foregroundColor(.lInk)
+            Text(phase.name)
+                .font(LFont.display(22))
+                .foregroundColor(.lInk)
 
-                Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
-                    .font(LFont.mono(11))
-                    .tracking(0.8)
-                    .foregroundColor(.lInk3)
+            Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
+                .font(LFont.mono(11))
+                .tracking(0.8)
+                .foregroundColor(.lInk3)
 
-                Spacer().frame(height: 5)
+            Spacer().frame(height: 4)
 
-                FourPhaseStrip(currentDay: appState.cycleDay, cycleLength: appState.cycleLength)
-            }
-
-            Spacer()
+            FourPhaseStrip(currentDay: appState.cycleDay, cycleLength: appState.cycleLength)
+                .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
         .padding(.bottom, 24)
     }
@@ -890,7 +888,7 @@ func recipeShareText(_ recipe: Recipe) -> String {
     return lines.joined(separator: "\n")
 }
 
-// MARK: - Four-phase progress strip
+// MARK: - Four-phase progress strip (proportional, full-width)
 struct FourPhaseStrip: View {
     let currentDay: Int
     let cycleLength: Int
@@ -898,6 +896,7 @@ struct FourPhaseStrip: View {
     private struct Segment {
         let start: Int
         let end: Int
+        var days: Int { end - start + 1 }
     }
 
     private var segments: [Segment] {
@@ -915,30 +914,38 @@ struct FourPhaseStrip: View {
 
     private func progress(_ s: Segment) -> Double {
         guard isActive(s) else { return 0 }
-        let span = Double(s.end - s.start)
+        let span = Double(s.days)
         guard span > 0 else { return 1 }
-        return Double(currentDay - s.start) / span
+        return Double(currentDay - s.start + 1) / span
     }
 
     var body: some View {
-        HStack(spacing: 5) {
-            ForEach(segments.indices, id: \.self) { i in
-                let s = segments[i]
-                let active = isActive(s)
-                let pillWidth: CGFloat = active ? 48 : 8
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.lInk.opacity(0.12))
-                        .frame(width: pillWidth, height: 6)
-                    if active {
+        let spacing: CGFloat = 4
+        let totalSpacing = spacing * CGFloat(segments.count - 1)
+        let totalDays = Double(max(1, cycleLength))
+
+        GeometryReader { geo in
+            let availableWidth = geo.size.width - totalSpacing
+            HStack(spacing: spacing) {
+                ForEach(segments.indices, id: \.self) { i in
+                    let s = segments[i]
+                    let segWidth = CGFloat(Double(s.days) / totalDays) * availableWidth
+                    let active = isActive(s)
+                    ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(Color.lInk)
-                            .frame(width: max(6, pillWidth * progress(s)), height: 6)
+                            .fill(Color.lInk.opacity(0.12))
+                        if active {
+                            Capsule()
+                                .fill(Color.lInk)
+                                .frame(width: max(6, segWidth * CGFloat(progress(s))))
+                        }
                     }
+                    .frame(width: segWidth, height: 6)
+                    .animation(.easeInOut(duration: 0.4), value: active)
                 }
-                .animation(.easeInOut(duration: 0.4), value: active)
             }
         }
+        .frame(height: 6)
     }
 }
 
