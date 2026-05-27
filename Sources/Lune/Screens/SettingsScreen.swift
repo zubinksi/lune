@@ -356,11 +356,7 @@ struct SettingsScreen: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
-            .background(
-                Color.lCream
-                    .ignoresSafeArea(edges: .top)
-                    .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
-            )
+            .background(Color.lCream)
         }
         .presentationBackground(Color.lCream)
     }

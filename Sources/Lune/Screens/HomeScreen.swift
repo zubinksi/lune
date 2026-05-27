@@ -70,13 +70,6 @@ struct HomeScreen: View {
             Spacer()
             Button { showSettings = true } label: {
                 ZStack {
-                    // Orbital ring behind planet
-                    Ellipse()
-                        .stroke(phaseColor.opacity(0.35), lineWidth: 1.5)
-                        .frame(width: 46, height: 11)
-                        .rotationEffect(.degrees(-18))
-
-                    // Planet body with radial gradient for depth
                     Circle()
                         .fill(
                             RadialGradient(
@@ -93,7 +86,6 @@ struct HomeScreen: View {
                         .font(LFont.display(15))
                         .foregroundColor(phaseColor)
                 }
-                .frame(width: 46, height: 46)
             }
         }
         .padding(.horizontal, 24)
@@ -216,10 +208,8 @@ struct HomeScreen: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.lPaper)
+                .background(Color.lInk.opacity(0.06))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color.lRule, lineWidth: 1))
                 .padding(.top, 14)
                 .transition(.opacity)
             }
@@ -766,11 +756,7 @@ struct SavedRecipeSheet: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
-            .background(
-                Color.lCream
-                    .ignoresSafeArea(edges: .top)
-                    .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
-            )
+            .background(Color.lCream)
         }
         .presentationBackground(Color.lCream)
     }
@@ -874,11 +860,7 @@ struct SavedRecipesLibrarySheet: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 20)
-            .background(
-                Color.lCream
-                    .ignoresSafeArea(edges: .top)
-                    .shadow(color: Color.lInk.opacity(0.04), radius: 8, x: 0, y: 4)
-            )
+            .background(Color.lCream)
         }
         .sheet(item: $selectedRecipe) { recipe in
             SavedRecipeSheet(recipe: recipe)
