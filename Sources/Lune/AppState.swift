@@ -29,6 +29,7 @@ class AppState: ObservableObject {
     @Published var nourishmentLoading: Bool = false
     @Published var nourishmentDate: String = ""
     @Published var nourishmentError: String? = nil
+    @Published var recentRecipeNames: [String] = []
 
     private let defaults = UserDefaults.standard
     private let encoder = JSONEncoder()
@@ -102,6 +103,11 @@ class AppState: ObservableObject {
             nourishmentDate = today
         }
 
+        if let data = defaults.data(forKey: "recentRecipeNames"),
+           let names = try? decoder.decode([String].self, from: data) {
+            recentRecipeNames = names
+        }
+
         if profile.referencePeriodDate != nil && !profile.healthKitConnected {
             computeCycleDayFromManual()
         } else {
@@ -128,6 +134,9 @@ class AppState: ObservableObject {
             defaults.set(data, forKey: "dailyNourishment")
             defaults.set(nourishmentDate, forKey: "nourishmentDate")
         }
+        if let data = try? encoder.encode(recentRecipeNames) {
+            defaults.set(data, forKey: "recentRecipeNames")
+        }
         defaults.set(cycleDay, forKey: "cycleDay")
         defaults.set(cycleLength, forKey: "cycleLength")
     }
@@ -136,6 +145,15 @@ class AppState: ObservableObject {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         return f.string(from: Date())
+    }
+
+    func currentSeason() -> String {
+        switch Calendar.current.component(.month, from: Date()) {
+        case 3...5:  return "spring"
+        case 6...8:  return "summer"
+        case 9...11: return "autumn"
+        default:     return "winter"
+        }
     }
 
     // MARK: - Daily nourishment generation
@@ -153,6 +171,9 @@ class AppState: ObservableObject {
         let cookingStyles = profile.cookingStyles.isEmpty ? "no preference" : profile.cookingStyles.joined(separator: ", ")
         let cookingStyleNotes = profile.cookingStyleNotes.trimmingCharacters(in: .whitespacesAndNewlines)
         let mood = dailyLog.mood ?? "not logged"
+        let season = currentSeason()
+        let avoidClause = recentRecipeNames.isEmpty ? "" :
+            "\nAvoid repeating these recently served recipes: \(recentRecipeNames.prefix(14).joined(separator: ", "))."
 
         let prompt = """
         You are a warm, knowledgeable nutritionist who designs meals around the menstrual cycle.
@@ -160,10 +181,11 @@ class AppState: ObservableObject {
         Generate exactly 3 complete recipes for someone in their \(phase.name) phase, day \(cycleDay) of a \(cycleLength)-day cycle.
 
         Context:
+        - Season: \(season) — favour ingredients that are naturally in season
         - Symptoms to address: \(symptoms)
         - Dietary preferences: \(diet)
         - Cooking style & flavour profile: \(cookingStyles)\(cookingStyleNotes.isEmpty ? "" : ". Additional: \(cookingStyleNotes)")
-        - How she feels today: \(mood)
+        - How she feels today: \(mood)\(avoidClause)
 
         Each recipe should be doable in 30 minutes or less and specifically suited to the \(phase.name) phase. Vary the meal timing: one morning, one midday, one evening.
 
@@ -192,13 +214,16 @@ class AppState: ObservableObject {
             let decoded = try JSONDecoder().decode(RecipeResponse.self, from: Data(cleaned.utf8))
             guard decoded.recipes.count >= 1 else { throw URLError(.badServerResponse) }
 
-            dailyNourishment = decoded.recipes.map { r in
+            let newRecipes = decoded.recipes.map { r in
                 Recipe(name: r.name, time: r.time, why: r.why,
                        ingredients: r.ingredients, steps: r.steps,
                        icon: defaultIcon(for: phase.name),
                        phase: phase.name)
             }
+            dailyNourishment = newRecipes
             nourishmentDate = today
+            let newNames = newRecipes.map { $0.name }
+            recentRecipeNames = Array((newNames + recentRecipeNames).prefix(21))
         } catch {
             nourishmentError = error.localizedDescription
         }

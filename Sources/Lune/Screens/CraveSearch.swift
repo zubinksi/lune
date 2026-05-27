@@ -217,12 +217,14 @@ struct CraveSearchSection: View {
             : appState.profile.cookingStyles.joined(separator: ", ")
         let cookingStyleNotes = appState.profile.cookingStyleNotes.trimmingCharacters(in: .whitespacesAndNewlines)
         let mood = appState.dailyLog.mood ?? "not logged"
+        let season = appState.currentSeason()
 
         let prompt = """
         You are a warm, knowledgeable nutritionist who designs recipes around the menstrual cycle.
 
         Today's context:
         - Cycle phase: \(phase.name)
+        - Season: \(season) — favour ingredients that are naturally in season
         - How she feels today: \(mood)
         - Symptoms she wants to address: \(symptoms)
         - Dietary preferences: \(diet)
