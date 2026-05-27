@@ -69,13 +69,31 @@ struct HomeScreen: View {
         HStack {
             Spacer()
             Button { showSettings = true } label: {
-                Text(appState.profile.name.prefix(1).uppercased())
-                    .font(LFont.display(15))
-                    .foregroundColor(phaseColor)
-                    .frame(width: 32, height: 32)
-                    .background(phaseColor.opacity(0.12))
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(phaseColor.opacity(0.3), lineWidth: 1))
+                ZStack {
+                    // Orbital ring behind planet
+                    Ellipse()
+                        .stroke(phaseColor.opacity(0.35), lineWidth: 1.5)
+                        .frame(width: 46, height: 11)
+                        .rotationEffect(.degrees(-18))
+
+                    // Planet body with radial gradient for depth
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [phaseColor.opacity(0.22), phaseColor.opacity(0.09)],
+                                center: UnitPoint(x: 0.35, y: 0.3),
+                                startRadius: 1,
+                                endRadius: 16
+                            )
+                        )
+                        .frame(width: 32, height: 32)
+                        .overlay(Circle().stroke(phaseColor.opacity(0.25), lineWidth: 1))
+
+                    Text(appState.profile.name.prefix(1).uppercased())
+                        .font(LFont.display(15))
+                        .foregroundColor(phaseColor)
+                }
+                .frame(width: 46, height: 46)
             }
         }
         .padding(.horizontal, 24)
