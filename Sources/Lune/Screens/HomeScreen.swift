@@ -442,20 +442,26 @@ struct NourishmentCard: View {
     let currentPhase: String
     @EnvironmentObject var appState: AppState
     @State private var expanded = false
+    @State private var tweakedRecipe: Recipe? = nil
+    @State private var tweaking = false
+    @State private var tweakText = ""
+    @State private var tweakLoading = false
+
+    var display: Recipe { tweakedRecipe ?? recipe }
 
     var isSaved: Bool {
-        appState.savedRecipes.contains { $0.name == recipe.name }
+        appState.savedRecipes.contains { $0.name == display.name }
     }
 
     var iconColor: Color {
-        switch recipe.icon {
+        switch display.icon {
         case "salmon": return .lTerracottaDeep
         case "leaf":   return .lSage
         default:       return .lTerracotta
         }
     }
 
-    var hasDetail: Bool { !recipe.ingredients.isEmpty || !recipe.steps.isEmpty }
+    var hasDetail: Bool { !display.ingredients.isEmpty || !display.steps.isEmpty }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -472,17 +478,17 @@ struct NourishmentCard: View {
                             .frame(width: 64, height: 64)
                             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 .stroke(Color.lRule, lineWidth: 1))
-                        FoodIconView(kind: recipe.icon, size: 42, color: iconColor)
+                        FoodIconView(kind: display.icon, size: 42, color: iconColor)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Eyebrow(recipe.time.uppercased())
-                        Text(recipe.name)
+                        Eyebrow(display.time.uppercased())
+                        Text(display.name)
                             .font(LFont.displayRegular(19))
                             .foregroundColor(.lInk)
                             .lineSpacing(2)
                             .multilineTextAlignment(.leading)
-                        BodyText(text: recipe.why, size: 12.5)
+                        BodyText(text: display.why, size: 12.5)
                             .lineSpacing(2)
                     }
 
@@ -494,9 +500,9 @@ struct NourishmentCard: View {
                             .foregroundColor(isSaved ? .lPlum : .lInk)
                             .onTapGesture {
                                 if isSaved {
-                                    appState.savedRecipes.removeAll { $0.name == recipe.name }
+                                    appState.savedRecipes.removeAll { $0.name == display.name }
                                 } else {
-                                    var r = recipe
+                                    var r = display
                                     r.phase = currentPhase
                                     appState.savedRecipes.append(r)
                                 }
@@ -516,17 +522,17 @@ struct NourishmentCard: View {
             .buttonStyle(.plain)
 
             // Expanded detail
-            if expanded && (!recipe.ingredients.isEmpty || !recipe.steps.isEmpty) {
+            if expanded && hasDetail {
                 VStack(alignment: .leading, spacing: 0) {
                     Divider()
                         .background(Color.lRule)
                         .padding(.vertical, 14)
 
-                    if !recipe.ingredients.isEmpty {
+                    if !display.ingredients.isEmpty {
                         Eyebrow("Ingredients")
                         Spacer().frame(height: 10)
                         VStack(alignment: .leading, spacing: 6) {
-                            ForEach(recipe.ingredients, id: \.self) { item in
+                            ForEach(display.ingredients, id: \.self) { item in
                                 HStack(alignment: .top, spacing: 8) {
                                     Circle()
                                         .fill(Color.lInk3)
@@ -542,11 +548,11 @@ struct NourishmentCard: View {
                         Spacer().frame(height: 16)
                     }
 
-                    if !recipe.steps.isEmpty {
+                    if !display.steps.isEmpty {
                         Eyebrow("How to make it")
                         Spacer().frame(height: 10)
                         VStack(alignment: .leading, spacing: 10) {
-                            ForEach(Array(recipe.steps.enumerated()), id: \.offset) { i, step in
+                            ForEach(Array(display.steps.enumerated()), id: \.offset) { i, step in
                                 HStack(alignment: .top, spacing: 10) {
                                     Text("\(i + 1)")
                                         .font(LFont.mono(10))
@@ -567,14 +573,60 @@ struct NourishmentCard: View {
                     Divider().background(Color.lRule)
                     Spacer().frame(height: 12)
 
-                    ShareLink(item: recipeShareText(recipe)) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 12, weight: .regular))
-                            Text("Share recipe")
-                                .font(LFont.body(13))
+                    HStack {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.15)) {
+                                tweaking.toggle()
+                                if !tweaking { tweakText = "" }
+                            }
+                        } label: {
+                            HStack(spacing: 5) {
+                                Image(systemName: "slider.horizontal.3")
+                                    .font(.system(size: 12, weight: .regular))
+                                Text(tweakedRecipe != nil ? "Tweak again" : "Tweak")
+                                    .font(LFont.body(13))
+                            }
+                            .foregroundColor(tweaking ? .lPlum : .lInk2)
                         }
-                        .foregroundColor(.lInk2)
+
+                        Spacer()
+
+                        ShareLink(item: recipeShareText(display)) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.system(size: 12, weight: .regular))
+                                Text("Share recipe")
+                                    .font(LFont.body(13))
+                            }
+                            .foregroundColor(.lInk2)
+                        }
+                    }
+
+                    if tweaking {
+                        Spacer().frame(height: 10)
+                        HStack(spacing: 8) {
+                            TextField("e.g. use whole milk, swap walnuts…", text: $tweakText)
+                                .font(LFont.body(13))
+                                .foregroundColor(.lInk)
+                                .autocorrectionDisabled()
+                                .onSubmit { Task { await performTweak() } }
+                            Button {
+                                Task { await performTweak() }
+                            } label: {
+                                Text(tweakLoading ? "…" : "Go")
+                                    .font(LFont.body(13, weight: .medium))
+                                    .foregroundColor(tweakText.trimmingCharacters(in: .whitespaces).isEmpty ? .lInk3 : .lCream)
+                                    .padding(.horizontal, 14)
+                                    .frame(height: 32)
+                                    .background(tweakText.trimmingCharacters(in: .whitespaces).isEmpty ? Color.lCream2 : Color.lPlum)
+                                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            }
+                            .disabled(tweakText.trimmingCharacters(in: .whitespaces).isEmpty || tweakLoading)
+                        }
+                        .padding(10)
+                        .background(Color.lInk.opacity(0.04))
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
@@ -584,6 +636,34 @@ struct NourishmentCard: View {
         .padding(18)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .cardStyle()
+    }
+
+    @MainActor
+    private func performTweak() async {
+        let t = tweakText.trimmingCharacters(in: .whitespaces)
+        guard !t.isEmpty else { return }
+        tweakLoading = true
+        do {
+            let d = display
+            let result = try await callAnthropicTweak(
+                name: d.name, time: d.time, why: d.why,
+                ingredients: d.ingredients, steps: d.steps,
+                tweak: t,
+                phase: currentPhase,
+                season: appState.currentSeason(),
+                diet: appState.profile.diet.isEmpty ? "no restrictions" : appState.profile.diet.joined(separator: ", ")
+            )
+            tweakedRecipe = Recipe(
+                name: result.name, time: result.time, why: result.why,
+                ingredients: result.ingredients, steps: result.steps,
+                icon: recipe.icon, phase: currentPhase
+            )
+            withAnimation(.easeInOut(duration: 0.2)) {
+                tweaking = false
+                tweakText = ""
+            }
+        } catch { }
+        tweakLoading = false
     }
 }
 

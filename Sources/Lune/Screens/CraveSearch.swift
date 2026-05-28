@@ -324,6 +324,12 @@ struct GeneratedRecipeCard: View {
     let onToggle: () -> Void
     @EnvironmentObject var appState: AppState
     @State private var isSaved = false
+    @State private var tweakedRecipe: GeneratedRecipeData? = nil
+    @State private var tweaking = false
+    @State private var tweakText = ""
+    @State private var tweakLoading = false
+
+    var display: GeneratedRecipeData { tweakedRecipe ?? recipe }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -331,11 +337,11 @@ struct GeneratedRecipeCard: View {
             Button(action: onToggle) {
                 HStack(alignment: .top, spacing: 10) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Eyebrow(recipe.time, color: .lInk3)
-                        Text(recipe.name)
+                        Eyebrow(display.time, color: .lInk3)
+                        Text(display.name)
                             .font(LFont.displayRegular(18))
                             .foregroundColor(.lInk)
-                        BodyText(text: recipe.why, size: 12.5)
+                        BodyText(text: display.why, size: 12.5)
                     }
 
                     Spacer(minLength: 8)
@@ -364,13 +370,13 @@ struct GeneratedRecipeCard: View {
                         Eyebrow("Ingredients", color: .lInk3)
                         Spacer().frame(height: 8)
 
-                        ForEach(recipe.ingredients.indices, id: \.self) { i in
+                        ForEach(display.ingredients.indices, id: \.self) { i in
                             HStack(alignment: .top, spacing: 8) {
                                 Circle()
                                     .fill(Color.lTerracotta)
                                     .frame(width: 4, height: 4)
                                     .padding(.top, 8)
-                                Text(recipe.ingredients[i])
+                                Text(display.ingredients[i])
                                     .font(LFont.body(13))
                                     .foregroundColor(.lInk2)
                                     .lineSpacing(2)
@@ -378,19 +384,19 @@ struct GeneratedRecipeCard: View {
                             .padding(.bottom, 5)
                         }
 
-                        if !recipe.steps.isEmpty {
+                        if !display.steps.isEmpty {
                             Spacer().frame(height: 14)
                             Eyebrow("Prep", color: .lInk3)
                             Spacer().frame(height: 8)
 
-                            ForEach(recipe.steps.indices, id: \.self) { i in
+                            ForEach(display.steps.indices, id: \.self) { i in
                                 HStack(alignment: .top, spacing: 10) {
                                     Text(String(format: "%02d", i + 1))
                                         .font(LFont.mono(10))
                                         .tracking(1)
                                         .foregroundColor(.lInk3)
                                         .padding(.top, 3)
-                                    Text(recipe.steps[i])
+                                    Text(display.steps[i])
                                         .font(LFont.body(13))
                                         .foregroundColor(.lInk2)
                                         .lineSpacing(2)
@@ -405,11 +411,11 @@ struct GeneratedRecipeCard: View {
                             Button {
                                 if !isSaved {
                                     let r = Recipe(
-                                        name: recipe.name,
-                                        time: recipe.time,
-                                        why: recipe.why,
-                                        ingredients: recipe.ingredients,
-                                        steps: recipe.steps,
+                                        name: display.name,
+                                        time: display.time,
+                                        why: display.why,
+                                        ingredients: display.ingredients,
+                                        steps: display.steps,
                                         icon: "leaf",
                                         phase: currentPhase
                                     )
@@ -427,7 +433,23 @@ struct GeneratedRecipeCard: View {
                             }
                             .animation(.easeInOut(duration: 0.2), value: isSaved)
 
-                            ShareLink(item: generatedRecipeShareText(recipe)) {
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    tweaking.toggle()
+                                    if !tweaking { tweakText = "" }
+                                }
+                            } label: {
+                                Image(systemName: "slider.horizontal.3")
+                                    .font(.system(size: 14, weight: .regular))
+                                    .foregroundColor(tweaking ? .lPlum : .lInk2)
+                                    .frame(width: 38, height: 38)
+                                    .background(tweaking ? Color.lPlum.opacity(0.1) : Color.lCream2)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .stroke(tweaking ? Color.lPlum.opacity(0.3) : Color.lRule, lineWidth: 1))
+                            }
+
+                            ShareLink(item: generatedRecipeShareText(display)) {
                                 Image(systemName: "square.and.arrow.up")
                                     .font(.system(size: 14, weight: .regular))
                                     .foregroundColor(.lInk2)
@@ -437,6 +459,33 @@ struct GeneratedRecipeCard: View {
                                     .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
                                         .stroke(Color.lRule, lineWidth: 1))
                             }
+                        }
+
+                        if tweaking {
+                            Spacer().frame(height: 10)
+                            HStack(spacing: 8) {
+                                TextField("e.g. use whole milk, swap walnuts…", text: $tweakText)
+                                    .font(LFont.body(13))
+                                    .foregroundColor(.lInk)
+                                    .autocorrectionDisabled()
+                                    .onSubmit { Task { await performTweak() } }
+                                Button {
+                                    Task { await performTweak() }
+                                } label: {
+                                    Text(tweakLoading ? "…" : "Go")
+                                        .font(LFont.body(13, weight: .medium))
+                                        .foregroundColor(tweakText.trimmingCharacters(in: .whitespaces).isEmpty ? .lInk3 : .lCream)
+                                        .padding(.horizontal, 14)
+                                        .frame(height: 34)
+                                        .background(tweakText.trimmingCharacters(in: .whitespaces).isEmpty ? Color.lCream2 : Color.lPlum)
+                                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                                }
+                                .disabled(tweakText.trimmingCharacters(in: .whitespaces).isEmpty || tweakLoading)
+                            }
+                            .padding(10)
+                            .background(Color.lInk.opacity(0.04))
+                            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                         }
                     }
                     .padding(.horizontal, 16)
@@ -450,6 +499,31 @@ struct GeneratedRecipeCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.lRule, lineWidth: 1))
         .clipped()
+    }
+
+    @MainActor
+    private func performTweak() async {
+        let t = tweakText.trimmingCharacters(in: .whitespaces)
+        guard !t.isEmpty else { return }
+        tweakLoading = true
+        do {
+            let d = display
+            let result = try await callAnthropicTweak(
+                name: d.name, time: d.time, why: d.why,
+                ingredients: d.ingredients, steps: d.steps,
+                tweak: t,
+                phase: currentPhase,
+                season: appState.currentSeason(),
+                diet: appState.profile.diet.isEmpty ? "no restrictions" : appState.profile.diet.joined(separator: ", ")
+            )
+            tweakedRecipe = result
+            isSaved = false
+            withAnimation(.easeInOut(duration: 0.2)) {
+                tweaking = false
+                tweakText = ""
+            }
+        } catch { }
+        tweakLoading = false
     }
 }
 
@@ -487,6 +561,44 @@ struct SpinnerView: View {
                 }
             }
     }
+}
+
+// MARK: - Recipe tweak call
+func callAnthropicTweak(
+    name: String, time: String, why: String,
+    ingredients: [String], steps: [String],
+    tweak: String, phase: String, season: String, diet: String
+) async throws -> GeneratedRecipeData {
+    let prompt = """
+    You are a warm, knowledgeable nutritionist.
+
+    Adjust this recipe based on the following request: \(tweak)
+    Keep the same dish concept and meal timing. Only change what was asked.
+
+    Original:
+    Name: \(name)
+    Ingredients: \(ingredients.joined(separator: " · "))
+
+    Context:
+    - Cycle phase: \(phase)
+    - Season: \(season)
+    - Dietary preferences: \(diet)
+
+    Respond with ONLY a valid JSON object — no prose, no markdown, no code fences:
+    {
+      "name": "short evocative name (max 6 words)",
+      "time": "\(time)",
+      "why": "ONE warm sentence (max 18 words) tying it to the \(phase) phase",
+      "ingredients": ["7-9 short ingredient lines with quantities"],
+      "steps": ["3-5 brief prep steps, one sentence each"]
+    }
+    """
+    let text = try await callAnthropic(prompt: prompt)
+    let cleaned = text
+        .replacingOccurrences(of: "^```(?:json)?\\s*", with: "", options: .regularExpression)
+        .replacingOccurrences(of: "```\\s*$", with: "", options: .regularExpression)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    return try JSONDecoder().decode(GeneratedRecipeData.self, from: Data(cleaned.utf8))
 }
 
 // MARK: - Anthropic API call (shared with AppState for daily nourishment)
