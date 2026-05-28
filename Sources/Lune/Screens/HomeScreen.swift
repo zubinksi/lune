@@ -20,8 +20,6 @@ struct HomeScreen: View {
     @State private var showSavedRecipes = false
     @State private var showProfileMenu = false
     @State private var nourishmentTab: NourishmentTab = .daily
-    @State private var showPhaseDetail = false
-    @State private var detailPhaseIndex: Int = 0
 
     private var hasProxy: Bool {
         !ProxyConfig.proxyURL.contains("your-subdomain")
@@ -36,6 +34,7 @@ struct HomeScreen: View {
             VStack(alignment: .leading, spacing: 0) {
                 profileHeader
                 phaseBar
+                phaseCard
                 divider(32)
                 moodCheckIn
                 divider(32)
@@ -60,9 +59,6 @@ struct HomeScreen: View {
         .sheet(isPresented: $showSettings) {
             SettingsScreen()
                 .environmentObject(appState)
-        }
-        .sheet(isPresented: $showPhaseDetail) {
-            PhaseDetailSheet(phaseIndex: $detailPhaseIndex)
         }
     }
 
@@ -113,20 +109,9 @@ struct HomeScreen: View {
                 craterColor: Color(red: 245/255, green: 240/255, blue: 232/255).opacity(0.3)
             )
 
-            Button {
-                detailPhaseIndex = ["Menstrual", "Follicular", "Ovulatory", "Luteal"].firstIndex(of: phase.name) ?? 0
-                showPhaseDetail = true
-            } label: {
-                HStack(spacing: 5) {
-                    Text(phase.name)
-                        .font(LFont.display(22))
-                        .foregroundColor(.lInk)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundColor(.lInk3)
-                }
-            }
-            .buttonStyle(.plain)
+            Text(phase.name)
+                .font(LFont.display(22))
+                .foregroundColor(.lInk)
 
             Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
                 .font(LFont.mono(11))
@@ -140,6 +125,43 @@ struct HomeScreen: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
+    }
+
+    // MARK: - Phase card (always open, plum themed)
+    var phaseCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if let explainer = phaseExplainer[phase.name] {
+                Text(explainer)
+                    .font(LFont.body(13.5))
+                    .foregroundColor(.lPlumDeep)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let foods = phaseFoods[phase.name] {
+                FlowLayout(spacing: 6) {
+                    ForEach(foods, id: \.self) { food in
+                        Text(food)
+                            .font(LFont.body(12))
+                            .foregroundColor(.lPlum)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.lPlum.opacity(0.08))
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(Color.lPlum.opacity(0.2), lineWidth: 1))
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.lPlum.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .stroke(Color.lPlum.opacity(0.15), lineWidth: 1))
+        .padding(.horizontal, 24)
+        .padding(.top, 16)
     }
 
     // MARK: - Mood check-in
@@ -878,145 +900,6 @@ func recipeShareText(_ recipe: Recipe) -> String {
     }
     lines.append("\n— Shared from Ona")
     return lines.joined(separator: "\n")
-}
-
-// MARK: - Phase detail sheet
-private let phaseOrder = ["Menstrual", "Follicular", "Ovulatory", "Luteal"]
-
-struct PhaseDetailSheet: View {
-    @Binding var phaseIndex: Int
-
-    private var phaseName: String { phaseOrder[phaseIndex] }
-    private var detail: PhaseDetail? { phaseDetails[phaseName] }
-    private var explainer: String { phaseExplainer[phaseName] ?? "" }
-    private var foods: [String] { phaseFoods[phaseName] ?? [] }
-
-    var body: some View {
-        Color.lCream.ignoresSafeArea()
-            .overlay(
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
-                        Spacer().frame(height: 28)
-
-                        Text(phaseName)
-                            .font(LFont.display(34))
-                            .foregroundColor(.lInk)
-
-                        if let d = detail {
-                            Text(d.days)
-                                .font(LFont.mono(11))
-                                .tracking(0.8)
-                                .foregroundColor(.lInk3)
-                                .padding(.top, 4)
-                        }
-
-                        Spacer().frame(height: 16)
-
-                        Text(explainer)
-                            .font(LFont.body(15))
-                            .foregroundColor(.lInk)
-                            .lineSpacing(4)
-                            .fixedSize(horizontal: false, vertical: true)
-
-                        Spacer().frame(height: 28)
-
-                        Eyebrow("Why this happens")
-                        Spacer().frame(height: 10)
-
-                        if let d = detail {
-                            Text(d.hormones)
-                                .font(LFont.body(14))
-                                .foregroundColor(.lInk2)
-                                .lineSpacing(4)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-
-                        Spacer().frame(height: 28)
-
-                        if let d = detail, !d.youMightNotice.isEmpty {
-                            Eyebrow("You might notice")
-                            Spacer().frame(height: 10)
-                            VStack(alignment: .leading, spacing: 8) {
-                                ForEach(d.youMightNotice, id: \.self) { item in
-                                    HStack(alignment: .top, spacing: 10) {
-                                        Circle()
-                                            .fill(Color.lInk3)
-                                            .frame(width: 4, height: 4)
-                                            .padding(.top, 6)
-                                        Text(item)
-                                            .font(LFont.body(14))
-                                            .foregroundColor(.lInk2)
-                                            .lineSpacing(3)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                    }
-                                }
-                            }
-                            Spacer().frame(height: 28)
-                        }
-
-                        Eyebrow("Foods to focus on")
-                        Spacer().frame(height: 12)
-
-                        FlowLayout(spacing: 8) {
-                            ForEach(foods, id: \.self) { food in
-                                Text(food)
-                                    .font(LFont.body(13))
-                                    .foregroundColor(.lInk2)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 7)
-                                    .background(Color.lPaper)
-                                    .clipShape(Capsule())
-                                    .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
-                            }
-                        }
-
-                        Spacer().frame(height: 32)
-                        Divider().background(Color.lRule)
-                        Spacer().frame(height: 20)
-
-                        // Bottom navigation
-                        HStack {
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.18)) {
-                                    phaseIndex = (phaseIndex - 1 + 4) % 4
-                                }
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "chevron.left")
-                                        .font(.system(size: 11, weight: .regular))
-                                    Text(phaseOrder[(phaseIndex - 1 + 4) % 4])
-                                        .font(LFont.body(13))
-                                }
-                                .foregroundColor(.lInk2)
-                            }
-
-                            Spacer()
-
-                            Button {
-                                withAnimation(.easeInOut(duration: 0.18)) {
-                                    phaseIndex = (phaseIndex + 1) % 4
-                                }
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Text(phaseOrder[(phaseIndex + 1) % 4])
-                                        .font(LFont.body(13))
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 11, weight: .regular))
-                                }
-                                .foregroundColor(.lInk2)
-                            }
-                        }
-
-                        Spacer().frame(height: 48)
-                    }
-                    .padding(.horizontal, 24)
-                    .animation(.easeInOut(duration: 0.18), value: phaseIndex)
-                }
-            )
-        .presentationBackground(Color.lCream)
-        .presentationDetents([.large])
-        .presentationDragIndicator(.hidden)
-    }
 }
 
 // MARK: - Four-phase progress strip (proportional, full-width)
