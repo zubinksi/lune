@@ -19,6 +19,8 @@ struct HomeScreen: View {
     @State private var showSettings = false
     @State private var showSavedRecipes = false
     @State private var nourishmentTab: NourishmentTab = .daily
+    @State private var showPhaseDetail = false
+    @State private var detailPhaseIndex: Int = 0
 
     private var hasProxy: Bool {
         !ProxyConfig.proxyURL.contains("your-subdomain")
@@ -37,8 +39,6 @@ struct HomeScreen: View {
                 moodCheckIn
                 divider(32)
                 nourishmentSection
-                divider(32)
-                partnerShare
                 divider(24)
                 footer
                 Spacer().frame(height: 60)
@@ -59,6 +59,9 @@ struct HomeScreen: View {
         .sheet(isPresented: $showSettings) {
             SettingsScreen()
                 .environmentObject(appState)
+        }
+        .sheet(isPresented: $showPhaseDetail) {
+            PhaseDetailSheet(phaseIndex: $detailPhaseIndex)
         }
     }
 
@@ -87,7 +90,7 @@ struct HomeScreen: View {
             }
         }
         .padding(.horizontal, 24)
-        .padding(.top, 56)
+        .padding(.top, 8)
         .padding(.bottom, 10)
     }
 
@@ -104,22 +107,25 @@ struct HomeScreen: View {
                 craterColor: Color(red: 245/255, green: 240/255, blue: 232/255).opacity(0.3)
             )
 
-            Text(phase.name)
-                .font(LFont.display(22))
-                .foregroundColor(.lInk)
+            Button {
+                detailPhaseIndex = ["Menstrual", "Follicular", "Ovulatory", "Luteal"].firstIndex(of: phase.name) ?? 0
+                showPhaseDetail = true
+            } label: {
+                HStack(spacing: 5) {
+                    Text(phase.name)
+                        .font(LFont.display(22))
+                        .foregroundColor(.lInk)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundColor(.lInk3)
+                }
+            }
+            .buttonStyle(.plain)
 
             Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
                 .font(LFont.mono(11))
                 .tracking(0.8)
                 .foregroundColor(.lInk3)
-
-            if let caption = phaseExplainer[phase.name] {
-                Text(caption)
-                    .font(LFont.body(13))
-                    .foregroundColor(.lInk2)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 12)
-            }
 
             Spacer().frame(height: 4)
 
@@ -297,48 +303,6 @@ struct HomeScreen: View {
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: active)
-    }
-
-    // MARK: - Partner share
-    var partnerShare: some View {
-        let name = appState.profile.name
-        let foods = phaseFoods[phase.name]?.joined(separator: ", ") ?? ""
-        let shareText = "\(name) is in her \(phase.name.lowercased()) phase today (day \(appState.cycleDay) of \(appState.cycleLength)).\n\nOna recommends: \(foods).\n\nOna — cycle nutrition, shaped around her."
-
-        return ShareLink(item: shareText) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(Color.lCream2)
-                        .frame(width: 44, height: 44)
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 16, weight: .regular))
-                        .foregroundColor(.lInk)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("For your partner")
-                        .font(LFont.display(18, italic: true))
-                        .foregroundColor(.lInk)
-                    BodyText(text: "A gentle \"what to cook for her this week\" summary.", size: 12.5)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(.lInk2)
-            }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 20)
-            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5, 3]))
-                    .foregroundColor(Color.lRule)
-            )
-        }
-        .padding(.horizontal, 24)
     }
 
     // MARK: - Footer
@@ -918,6 +882,124 @@ func recipeShareText(_ recipe: Recipe) -> String {
     }
     lines.append("\n— Shared from Ona")
     return lines.joined(separator: "\n")
+}
+
+// MARK: - Phase detail sheet
+private let phaseOrder = ["Menstrual", "Follicular", "Ovulatory", "Luteal"]
+
+struct PhaseDetailSheet: View {
+    @Binding var phaseIndex: Int
+
+    private var phaseName: String { phaseOrder[phaseIndex] }
+    private var detail: PhaseDetail? { phaseDetails[phaseName] }
+    private var explainer: String { phaseExplainer[phaseName] ?? "" }
+    private var foods: [String] { phaseFoods[phaseName] ?? [] }
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Color.lCream.ignoresSafeArea()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Spacer().frame(height: 68)
+
+                    Text(phaseName)
+                        .font(LFont.display(34))
+                        .foregroundColor(.lInk)
+
+                    if let d = detail {
+                        Text(d.days)
+                            .font(LFont.mono(11))
+                            .tracking(0.8)
+                            .foregroundColor(.lInk3)
+                            .padding(.top, 4)
+                    }
+
+                    Spacer().frame(height: 16)
+
+                    Text(explainer)
+                        .font(LFont.body(15))
+                        .foregroundColor(.lInk)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Spacer().frame(height: 28)
+
+                    Eyebrow("Why this happens")
+                    Spacer().frame(height: 10)
+
+                    if let d = detail {
+                        Text(d.hormones)
+                            .font(LFont.body(14))
+                            .foregroundColor(.lInk2)
+                            .lineSpacing(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer().frame(height: 28)
+
+                    Eyebrow("Foods to focus on")
+                    Spacer().frame(height: 12)
+
+                    FlowLayout(spacing: 8) {
+                        ForEach(foods, id: \.self) { food in
+                            Text(food)
+                                .font(LFont.body(13))
+                                .foregroundColor(.lInk2)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(Color.lPaper)
+                                .clipShape(Capsule())
+                                .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+                        }
+                    }
+
+                    Spacer().frame(height: 60)
+                }
+                .padding(.horizontal, 24)
+                .animation(.easeInOut(duration: 0.18), value: phaseIndex)
+            }
+
+            // Top nav bar
+            HStack {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        phaseIndex = (phaseIndex - 1 + 4) % 4
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 11, weight: .regular))
+                        Text(phaseOrder[(phaseIndex - 1 + 4) % 4])
+                            .font(LFont.body(13))
+                    }
+                    .foregroundColor(.lInk2)
+                }
+
+                Spacer()
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        phaseIndex = (phaseIndex + 1) % 4
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(phaseOrder[(phaseIndex + 1) % 4])
+                            .font(LFont.body(13))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .regular))
+                    }
+                    .foregroundColor(.lInk2)
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            .background(Color.lCream)
+        }
+        .presentationBackground(Color.lCream)
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
 }
 
 // MARK: - Four-phase progress strip (proportional, full-width)
