@@ -167,36 +167,56 @@ struct HomeScreen: View {
     // MARK: - Mood check-in
     var moodCheckIn: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Eyebrow("Check-in")
-            Spacer().frame(height: 10)
-            SectionHeader(title: appState.profile.name.isEmpty ? "How are you feeling?" : "\(appState.profile.name), how are you feeling?")
+            if let mood = appState.dailyLog.mood {
+                // Collapsed state — mood chip + edit + response text
+                HStack(spacing: 6) {
+                    Text(mood)
+                        .font(LFont.body(12, weight: .medium))
+                        .foregroundColor(.lPlum)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.lPlum.opacity(0.08))
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(Color.lPlum.opacity(0.2), lineWidth: 1))
 
-            HStack(spacing: 8) {
-                ForEach(["Steady", "Tender", "Tired", "Bright", "Bloated"], id: \.self) { m in
-                    MoodOptionButton(label: m, selected: appState.dailyLog.mood == m) {
-                        let wasNil = appState.dailyLog.mood == nil
-                        appState.dailyLog.mood = appState.dailyLog.mood == m ? nil : m
-                        if wasNil, appState.dailyLog.mood != nil {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.18)) {
+                            appState.dailyLog.mood = nil
+                        }
+                    } label: {
+                        Text("edit")
+                            .font(LFont.body(12))
+                            .foregroundColor(.lInk3)
+                    }
+                }
+
+                Spacer().frame(height: 10)
+
+                Text(moodResponse(mood))
+                    .font(LFont.body(13))
+                    .foregroundColor(.lInk2)
+                    .lineSpacing(3)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.lInk.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else {
+                // Expanded state — full check-in UI
+                Eyebrow("Check-in")
+                Spacer().frame(height: 10)
+                SectionHeader(title: appState.profile.name.isEmpty ? "How are you feeling?" : "\(appState.profile.name), how are you feeling?")
+
+                HStack(spacing: 8) {
+                    ForEach(["Steady", "Tender", "Tired", "Bright", "Bloated"], id: \.self) { m in
+                        MoodOptionButton(label: m, selected: false) {
+                            withAnimation(.easeInOut(duration: 0.18)) {
+                                appState.dailyLog.mood = m
+                            }
                             Task { await appState.loadDailyNourishment() }
                         }
                     }
                 }
-            }
-
-            if let mood = appState.dailyLog.mood {
-                HStack {
-                    Text(moodResponse(mood))
-                        .font(LFont.body(13))
-                        .foregroundColor(.lInk2)
-                        .lineSpacing(3)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.lInk.opacity(0.06))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .padding(.top, 14)
-                .transition(.opacity)
             }
         }
         .padding(.horizontal, 24)
