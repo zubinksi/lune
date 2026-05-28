@@ -75,18 +75,18 @@ struct HomeScreen: View {
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [phaseColor.opacity(0.22), phaseColor.opacity(0.09)],
+                                colors: [Color.lPlum.opacity(0.22), Color.lPlum.opacity(0.09)],
                                 center: UnitPoint(x: 0.35, y: 0.3),
                                 startRadius: 1,
                                 endRadius: 16
                             )
                         )
                         .frame(width: 32, height: 32)
-                        .overlay(Circle().stroke(phaseColor.opacity(0.25), lineWidth: 1))
+                        .overlay(Circle().stroke(Color.lPlum.opacity(0.25), lineWidth: 1))
 
                     Text(appState.profile.name.prefix(1).uppercased())
                         .font(LFont.display(15))
-                        .foregroundColor(phaseColor)
+                        .foregroundColor(.lPlum)
                 }
             }
             .confirmationDialog("", isPresented: $showProfileMenu, titleVisibility: .hidden) {
@@ -145,7 +145,7 @@ struct HomeScreen: View {
     // MARK: - Mood check-in
     var moodCheckIn: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Eyebrow("Today's check-in")
+            Eyebrow("Check-in")
             Spacer().frame(height: 10)
             SectionHeader(title: appState.profile.name.isEmpty ? "How are you feeling?" : "\(appState.profile.name), how are you feeling?")
 
@@ -292,7 +292,7 @@ struct HomeScreen: View {
                     .font(LFont.display(22))
                     .foregroundColor(active ? .lInk : .lInk3)
                 Rectangle()
-                    .fill(active ? Color.lInk : Color.clear)
+                    .fill(active ? Color.lPlum : Color.clear)
                     .frame(height: 2)
                     .clipShape(Capsule())
             }
@@ -1067,7 +1067,7 @@ struct FourPhaseStrip: View {
                             .fill(Color.lInk.opacity(0.12))
                         if active {
                             Capsule()
-                                .fill(Color.lInk)
+                                .fill(Color.lPlum)
                                 .frame(width: max(6, segWidth * CGFloat(progress(s))))
                         }
                     }
