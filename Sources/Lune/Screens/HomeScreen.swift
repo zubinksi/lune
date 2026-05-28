@@ -18,6 +18,7 @@ struct HomeScreen: View {
 
     @State private var showSettings = false
     @State private var showSavedRecipes = false
+    @State private var showProfileMenu = false
     @State private var nourishmentTab: NourishmentTab = .daily
     @State private var showPhaseDetail = false
     @State private var detailPhaseIndex: Int = 0
@@ -69,7 +70,7 @@ struct HomeScreen: View {
     var profileHeader: some View {
         HStack {
             Spacer()
-            Button { showSettings = true } label: {
+            Button { showProfileMenu = true } label: {
                 ZStack {
                     Circle()
                         .fill(
@@ -87,6 +88,11 @@ struct HomeScreen: View {
                         .font(LFont.display(15))
                         .foregroundColor(phaseColor)
                 }
+            }
+            .confirmationDialog("", isPresented: $showProfileMenu, titleVisibility: .hidden) {
+                Button("Saved Recipes") { showSavedRecipes = true }
+                Button("Settings") { showSettings = true }
+                Button("Cancel", role: .cancel) { }
             }
         }
         .padding(.horizontal, 24)
@@ -190,18 +196,9 @@ struct HomeScreen: View {
     // MARK: - Nourishment
     var nourishmentSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Eyebrow + bookmark
-            HStack(alignment: .center) {
-                Eyebrow("Nourishment")
-                Spacer()
-                Button { showSavedRecipes = true } label: {
-                    Image(systemName: appState.savedRecipes.isEmpty ? "bookmark" : "bookmark.fill")
-                        .font(.system(size: 16, weight: .light))
-                        .foregroundColor(appState.savedRecipes.isEmpty ? .lInk2 : .lPlum)
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 10)
+            Eyebrow("Nourishment")
+                .padding(.horizontal, 24)
+                .padding(.bottom, 10)
 
             // Display-size tab headers
             if aiEnabled {
