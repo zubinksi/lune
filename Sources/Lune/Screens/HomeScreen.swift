@@ -893,109 +893,130 @@ struct PhaseDetailSheet: View {
     private var foods: [String] { phaseFoods[phaseName] ?? [] }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            Color.lCream.ignoresSafeArea()
+        Color.lCream.ignoresSafeArea()
+            .overlay(
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Spacer().frame(height: 28)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    Spacer().frame(height: 68)
+                        Text(phaseName)
+                            .font(LFont.display(34))
+                            .foregroundColor(.lInk)
 
-                    Text(phaseName)
-                        .font(LFont.display(34))
-                        .foregroundColor(.lInk)
+                        if let d = detail {
+                            Text(d.days)
+                                .font(LFont.mono(11))
+                                .tracking(0.8)
+                                .foregroundColor(.lInk3)
+                                .padding(.top, 4)
+                        }
 
-                    if let d = detail {
-                        Text(d.days)
-                            .font(LFont.mono(11))
-                            .tracking(0.8)
-                            .foregroundColor(.lInk3)
-                            .padding(.top, 4)
-                    }
+                        Spacer().frame(height: 16)
 
-                    Spacer().frame(height: 16)
-
-                    Text(explainer)
-                        .font(LFont.body(15))
-                        .foregroundColor(.lInk)
-                        .lineSpacing(4)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Spacer().frame(height: 28)
-
-                    Eyebrow("Why this happens")
-                    Spacer().frame(height: 10)
-
-                    if let d = detail {
-                        Text(d.hormones)
-                            .font(LFont.body(14))
-                            .foregroundColor(.lInk2)
+                        Text(explainer)
+                            .font(LFont.body(15))
+                            .foregroundColor(.lInk)
                             .lineSpacing(4)
                             .fixedSize(horizontal: false, vertical: true)
-                    }
 
-                    Spacer().frame(height: 28)
+                        Spacer().frame(height: 28)
 
-                    Eyebrow("Foods to focus on")
-                    Spacer().frame(height: 12)
+                        Eyebrow("Why this happens")
+                        Spacer().frame(height: 10)
 
-                    FlowLayout(spacing: 8) {
-                        ForEach(foods, id: \.self) { food in
-                            Text(food)
-                                .font(LFont.body(13))
+                        if let d = detail {
+                            Text(d.hormones)
+                                .font(LFont.body(14))
                                 .foregroundColor(.lInk2)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 7)
-                                .background(Color.lPaper)
-                                .clipShape(Capsule())
-                                .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+                                .lineSpacing(4)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
-                    }
 
-                    Spacer().frame(height: 60)
+                        Spacer().frame(height: 28)
+
+                        if let d = detail, !d.youMightNotice.isEmpty {
+                            Eyebrow("You might notice")
+                            Spacer().frame(height: 10)
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(d.youMightNotice, id: \.self) { item in
+                                    HStack(alignment: .top, spacing: 10) {
+                                        Circle()
+                                            .fill(Color.lInk3)
+                                            .frame(width: 4, height: 4)
+                                            .padding(.top, 6)
+                                        Text(item)
+                                            .font(LFont.body(14))
+                                            .foregroundColor(.lInk2)
+                                            .lineSpacing(3)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                            }
+                            Spacer().frame(height: 28)
+                        }
+
+                        Eyebrow("Foods to focus on")
+                        Spacer().frame(height: 12)
+
+                        FlowLayout(spacing: 8) {
+                            ForEach(foods, id: \.self) { food in
+                                Text(food)
+                                    .font(LFont.body(13))
+                                    .foregroundColor(.lInk2)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 7)
+                                    .background(Color.lPaper)
+                                    .clipShape(Capsule())
+                                    .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+                            }
+                        }
+
+                        Spacer().frame(height: 32)
+                        Divider().background(Color.lRule)
+                        Spacer().frame(height: 20)
+
+                        // Bottom navigation
+                        HStack {
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.18)) {
+                                    phaseIndex = (phaseIndex - 1 + 4) % 4
+                                }
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 11, weight: .regular))
+                                    Text(phaseOrder[(phaseIndex - 1 + 4) % 4])
+                                        .font(LFont.body(13))
+                                }
+                                .foregroundColor(.lInk2)
+                            }
+
+                            Spacer()
+
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.18)) {
+                                    phaseIndex = (phaseIndex + 1) % 4
+                                }
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Text(phaseOrder[(phaseIndex + 1) % 4])
+                                        .font(LFont.body(13))
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 11, weight: .regular))
+                                }
+                                .foregroundColor(.lInk2)
+                            }
+                        }
+
+                        Spacer().frame(height: 48)
+                    }
+                    .padding(.horizontal, 24)
+                    .animation(.easeInOut(duration: 0.18), value: phaseIndex)
                 }
-                .padding(.horizontal, 24)
-                .animation(.easeInOut(duration: 0.18), value: phaseIndex)
-            }
-
-            // Top nav bar
-            HStack {
-                Button {
-                    withAnimation(.easeInOut(duration: 0.18)) {
-                        phaseIndex = (phaseIndex - 1 + 4) % 4
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 11, weight: .regular))
-                        Text(phaseOrder[(phaseIndex - 1 + 4) % 4])
-                            .font(LFont.body(13))
-                    }
-                    .foregroundColor(.lInk2)
-                }
-
-                Spacer()
-
-                Button {
-                    withAnimation(.easeInOut(duration: 0.18)) {
-                        phaseIndex = (phaseIndex + 1) % 4
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(phaseOrder[(phaseIndex + 1) % 4])
-                            .font(LFont.body(13))
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 11, weight: .regular))
-                    }
-                    .foregroundColor(.lInk2)
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.top, 20)
-            .background(Color.lCream)
-        }
+            )
         .presentationBackground(Color.lCream)
         .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
+        .presentationDragIndicator(.hidden)
     }
 }
 
