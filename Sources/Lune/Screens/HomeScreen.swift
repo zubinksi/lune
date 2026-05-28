@@ -106,7 +106,7 @@ struct HomeScreen: View {
             MoonView(
                 phase: phase.phase,
                 size: 112,
-                litColor: Color(red: 42/255, green: 37/255, blue: 32/255),
+                litColor: Color.lPlumDeep,
                 darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
                 showCraters: true,
                 showGlow: false,
@@ -140,7 +140,6 @@ struct HomeScreen: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 24)
-        .padding(.bottom, 24)
     }
 
     // MARK: - Mood check-in
