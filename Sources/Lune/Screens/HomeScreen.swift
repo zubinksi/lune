@@ -33,6 +33,7 @@ struct HomeScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 profileHeader
+                dateGreetingHeader
                 phaseBar
                 phaseCard
                 divider(32)
@@ -94,6 +95,41 @@ struct HomeScreen: View {
         .padding(.horizontal, 24)
         .padding(.top, 8)
         .padding(.bottom, 10)
+    }
+
+    // MARK: - Date + greeting header
+    var dateGreetingHeader: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(greetingText)
+                .font(LFont.display(28))
+                .foregroundColor(.lInk)
+                .lineSpacing(2)
+            Text(todayDateString)
+                .font(LFont.mono(11))
+                .tracking(0.8)
+                .foregroundColor(.lInk3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 24)
+        .padding(.bottom, 22)
+    }
+
+    private var greetingText: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        let name = appState.profile.name
+        let base: String
+        switch hour {
+        case 0..<12: base = "Good morning"
+        case 12..<17: base = "Good afternoon"
+        default:     base = "Good evening"
+        }
+        return name.isEmpty ? base : "\(base), \(name)"
+    }
+
+    private var todayDateString: String {
+        let f = DateFormatter()
+        f.dateFormat = "EEEE d MMMM"
+        return f.string(from: Date())
     }
 
     // MARK: - Phase bar (moon + phase name + strip)
@@ -213,7 +249,6 @@ struct HomeScreen: View {
                             withAnimation(.easeInOut(duration: 0.18)) {
                                 appState.dailyLog.mood = m
                             }
-                            Task { await appState.loadDailyNourishment() }
                         }
                     }
                 }
@@ -295,15 +330,21 @@ struct HomeScreen: View {
                     .cardStyle()
                     .padding(.horizontal, 24)
                 } else if appState.dailyNourishment.isEmpty {
-                    Text("Check in above and Ona will build your meals for the day.")
-                        .font(LFont.body(14))
-                        .foregroundColor(.lInk3)
-                        .lineSpacing(3)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(20)
-                        .cardStyle()
-                        .padding(.horizontal, 24)
+                    if appState.dailyLog.mood != nil {
+                        // Mood set — show compose CTA
+                        composeCTA
+                    } else {
+                        Text("Check in above, then compose your meals for the day.")
+                            .font(LFont.body(14))
+                            .foregroundColor(.lInk3)
+                            .lineSpacing(3)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(20)
+                            .cardStyle()
+                            .padding(.horizontal, 24)
+                    }
                 } else {
+                    composedFromRow
                     VStack(spacing: 10) {
                         ForEach(appState.dailyNourishment) { recipe in
                             NourishmentCard(recipe: recipe, currentPhase: phase.name)
@@ -317,6 +358,75 @@ struct HomeScreen: View {
             }
         }
         .animation(.easeInOut(duration: 0.18), value: nourishmentTab)
+    }
+
+    // MARK: - Compose CTA (mood set, no recipes yet)
+    var composeCTA: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            FlowLayout(spacing: 6) {
+                ForEach(composeContextChips, id: \.self) { chip in
+                    Text(chip)
+                        .font(LFont.body(11))
+                        .foregroundColor(.lInk2)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.lCream2)
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+                }
+            }
+
+            Button {
+                Task { await appState.loadDailyNourishment() }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "wand.and.stars")
+                        .font(.system(size: 13, weight: .regular))
+                    Text("Compose today's meals")
+                        .font(LFont.body(15, weight: .medium))
+                }
+                .foregroundColor(.lCream)
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(Color.lPlum)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+        }
+        .padding(.horizontal, 24)
+    }
+
+    // MARK: - Composed from chips (shown above recipe list)
+    var composedFromRow: some View {
+        HStack(spacing: 8) {
+            Text("From")
+                .font(LFont.mono(9.5))
+                .tracking(0.8)
+                .foregroundColor(.lInk3)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(composeContextChips, id: \.self) { chip in
+                        Text(chip)
+                            .font(LFont.body(11))
+                            .foregroundColor(.lPlum)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 4)
+                            .background(Color.lPlum.opacity(0.07))
+                            .clipShape(Capsule())
+                            .overlay(Capsule().stroke(Color.lPlum.opacity(0.18), lineWidth: 1))
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 12)
+    }
+
+    private var composeContextChips: [String] {
+        var chips = [phase.name, appState.currentSeason().capitalized]
+        if let mood = appState.dailyLog.mood { chips.append(mood) }
+        if !appState.profile.diet.isEmpty { chips.append(contentsOf: appState.profile.diet.prefix(2)) }
+        return chips
     }
 
     private func tabHeader(_ label: String, tab: NourishmentTab) -> some View {
