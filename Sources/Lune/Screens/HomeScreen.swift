@@ -304,17 +304,12 @@ struct HomeScreen: View {
                         .cardStyle()
                         .padding(.horizontal, 24)
                 } else {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(alignment: .top, spacing: 12) {
-                            ForEach(appState.dailyNourishment) { recipe in
-                                NourishmentCard(recipe: recipe, currentPhase: phase.name)
-                                    .frame(width: 300)
-                            }
+                    VStack(spacing: 10) {
+                        ForEach(appState.dailyNourishment) { recipe in
+                            NourishmentCard(recipe: recipe, currentPhase: phase.name)
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 2)
                     }
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 24)
                 }
             } else {
                 CraveSearchSection(embedded: true)
@@ -438,234 +433,78 @@ struct RecipeCard: View {
     }
 }
 
-// MARK: - Nourishment card (expandable, with full recipe)
+// MARK: - Nourishment card (tappable row → RecipeDetailView)
 struct NourishmentCard: View {
     let recipe: Recipe
     let currentPhase: String
     @EnvironmentObject var appState: AppState
-    @State private var expanded = false
-    @State private var tweakedRecipe: Recipe? = nil
-    @State private var tweaking = false
-    @State private var tweakText = ""
-    @State private var tweakLoading = false
-
-    var display: Recipe { tweakedRecipe ?? recipe }
+    @State private var showDetail = false
 
     var isSaved: Bool {
-        appState.savedRecipes.contains { $0.name == display.name }
+        appState.savedRecipes.contains { $0.name == recipe.name }
     }
 
     var iconColor: Color {
-        switch display.icon {
+        switch recipe.icon {
         case "salmon": return .lTerracottaDeep
         case "leaf":   return .lSage
         default:       return .lTerracotta
         }
     }
 
-    var hasDetail: Bool { !display.ingredients.isEmpty || !display.steps.isEmpty }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        Button { showDetail = true } label: {
+            HStack(alignment: .center, spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.lCream)
+                        .frame(width: 52, height: 52)
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.lRule, lineWidth: 1))
+                    FoodIconView(kind: recipe.icon, size: 34, color: iconColor)
+                }
 
-            // Header row — always visible, tap to expand
-            Button {
-                guard hasDetail else { return }
-                withAnimation(.easeInOut(duration: 0.22)) { expanded.toggle() }
-            } label: {
-                HStack(alignment: .top, spacing: 14) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color.lCream)
-                            .frame(width: 64, height: 64)
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(Color.lRule, lineWidth: 1))
-                        FoodIconView(kind: display.icon, size: 42, color: iconColor)
-                    }
+                VStack(alignment: .leading, spacing: 3) {
+                    Eyebrow(recipe.time)
+                    Text(recipe.name)
+                        .font(LFont.displayRegular(17))
+                        .foregroundColor(.lInk)
+                        .lineSpacing(2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Eyebrow(display.time.uppercased())
-                        Text(display.name)
-                            .font(LFont.displayRegular(19))
-                            .foregroundColor(.lInk)
-                            .lineSpacing(2)
-                            .multilineTextAlignment(.leading)
-                        BodyText(text: display.why, size: 12.5)
-                            .lineSpacing(2)
-                    }
+                Spacer(minLength: 0)
 
-                    Spacer(minLength: 0)
-
-                    VStack(alignment: .trailing, spacing: 10) {
-                        Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
-                            .font(.system(size: 13, weight: .regular))
-                            .foregroundColor(isSaved ? .lPlum : .lInk)
-                            .onTapGesture {
-                                if isSaved {
-                                    appState.savedRecipes.removeAll { $0.name == display.name }
-                                } else {
-                                    var r = display
-                                    r.phase = currentPhase
-                                    appState.savedRecipes.append(r)
-                                }
+                HStack(spacing: 12) {
+                    Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(isSaved ? .lPlum : .lInk3)
+                        .animation(.easeInOut(duration: 0.15), value: isSaved)
+                        .onTapGesture {
+                            if isSaved {
+                                appState.savedRecipes.removeAll { $0.name == recipe.name }
+                            } else {
+                                var r = recipe
+                                r.phase = currentPhase
+                                appState.savedRecipes.append(r)
                             }
-                            .animation(.easeInOut(duration: 0.15), value: isSaved)
+                        }
 
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 11, weight: .regular))
-                            .foregroundColor(.lInk3)
-                            .rotationEffect(.degrees(expanded ? 180 : 0))
-                            .animation(.easeInOut(duration: 0.22), value: expanded)
-                            .opacity(hasDetail ? 1 : 0)
-                    }
-                    .padding(.top, 4)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundColor(.lInk3)
                 }
             }
-            .buttonStyle(.plain)
-
-            // Expanded detail
-            if expanded && hasDetail {
-                VStack(alignment: .leading, spacing: 0) {
-                    Divider()
-                        .background(Color.lRule)
-                        .padding(.vertical, 14)
-
-                    if !display.ingredients.isEmpty {
-                        Eyebrow("Ingredients")
-                        Spacer().frame(height: 10)
-                        VStack(alignment: .leading, spacing: 6) {
-                            ForEach(display.ingredients, id: \.self) { item in
-                                HStack(alignment: .top, spacing: 8) {
-                                    Circle()
-                                        .fill(Color.lInk3)
-                                        .frame(width: 4, height: 4)
-                                        .padding(.top, 6)
-                                    Text(item)
-                                        .font(LFont.body(13.5))
-                                        .foregroundColor(.lInk2)
-                                        .lineSpacing(2)
-                                }
-                            }
-                        }
-                        Spacer().frame(height: 16)
-                    }
-
-                    if !display.steps.isEmpty {
-                        Eyebrow("How to make it")
-                        Spacer().frame(height: 10)
-                        VStack(alignment: .leading, spacing: 10) {
-                            ForEach(Array(display.steps.enumerated()), id: \.offset) { i, step in
-                                HStack(alignment: .top, spacing: 10) {
-                                    Text("\(i + 1)")
-                                        .font(LFont.mono(10))
-                                        .tracking(0.5)
-                                        .foregroundColor(.lInk3)
-                                        .frame(width: 16, alignment: .trailing)
-                                        .padding(.top, 3)
-                                    Text(step)
-                                        .font(LFont.body(13.5))
-                                        .foregroundColor(.lInk2)
-                                        .lineSpacing(3)
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer().frame(height: 16)
-                    Divider().background(Color.lRule)
-                    Spacer().frame(height: 12)
-
-                    HStack {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.15)) {
-                                tweaking.toggle()
-                                if !tweaking { tweakText = "" }
-                            }
-                        } label: {
-                            HStack(spacing: 5) {
-                                Image(systemName: "slider.horizontal.3")
-                                    .font(.system(size: 12, weight: .regular))
-                                Text(tweakedRecipe != nil ? "Tweak again" : "Tweak")
-                                    .font(LFont.body(13))
-                            }
-                            .foregroundColor(tweaking ? .lPlum : .lInk2)
-                        }
-
-                        Spacer()
-
-                        ShareLink(item: recipeShareText(display)) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "square.and.arrow.up")
-                                    .font(.system(size: 12, weight: .regular))
-                                Text("Share recipe")
-                                    .font(LFont.body(13))
-                            }
-                            .foregroundColor(.lInk2)
-                        }
-                    }
-
-                    if tweaking {
-                        Spacer().frame(height: 10)
-                        HStack(spacing: 8) {
-                            TextField("e.g. use whole milk, swap walnuts…", text: $tweakText)
-                                .font(LFont.body(13))
-                                .foregroundColor(.lInk)
-                                .autocorrectionDisabled()
-                                .onSubmit { Task { await performTweak() } }
-                            Button {
-                                Task { await performTweak() }
-                            } label: {
-                                Text(tweakLoading ? "…" : "Go")
-                                    .font(LFont.body(13, weight: .medium))
-                                    .foregroundColor(tweakText.trimmingCharacters(in: .whitespaces).isEmpty ? .lInk3 : .lCream)
-                                    .padding(.horizontal, 14)
-                                    .frame(height: 32)
-                                    .background(tweakText.trimmingCharacters(in: .whitespaces).isEmpty ? Color.lCream2 : Color.lPlum)
-                                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                            }
-                            .disabled(tweakText.trimmingCharacters(in: .whitespaces).isEmpty || tweakLoading)
-                        }
-                        .padding(10)
-                        .background(Color.lInk.opacity(0.04))
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                }
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-            if !expanded { Spacer(minLength: 0) }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle()
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .cardStyle()
-    }
-
-    @MainActor
-    private func performTweak() async {
-        let t = tweakText.trimmingCharacters(in: .whitespaces)
-        guard !t.isEmpty else { return }
-        tweakLoading = true
-        do {
-            let d = display
-            let result = try await callAnthropicTweak(
-                name: d.name, time: d.time, why: d.why,
-                ingredients: d.ingredients, steps: d.steps,
-                tweak: t,
-                phase: currentPhase,
-                season: appState.currentSeason(),
-                diet: appState.profile.diet.isEmpty ? "no restrictions" : appState.profile.diet.joined(separator: ", ")
-            )
-            tweakedRecipe = Recipe(
-                name: result.name, time: result.time, why: result.why,
-                ingredients: result.ingredients, steps: result.steps,
-                icon: recipe.icon, phase: currentPhase
-            )
-            withAnimation(.easeInOut(duration: 0.2)) {
-                tweaking = false
-                tweakText = ""
-            }
-        } catch { }
-        tweakLoading = false
+        .buttonStyle(.plain)
+        .fullScreenCover(isPresented: $showDetail) {
+            RecipeDetailView(recipe: recipe, currentPhase: currentPhase)
+                .environmentObject(appState)
+        }
     }
 }
 
