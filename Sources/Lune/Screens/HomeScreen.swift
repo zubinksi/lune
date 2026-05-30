@@ -1,51 +1,58 @@
 import SwiftUI
 
-enum NourishmentTab { case daily, crave }
-
 // MARK: - Home Screen
 struct HomeScreen: View {
     @EnvironmentObject var appState: AppState
 
-    private var phase: CyclePhaseInfo { appState.phaseInfo }
-    private var phaseColor: Color { Color.phase(named: phase.name) }
-    private var recipes: [Recipe] { defaultRecipes[phase.name] ?? defaultRecipes["Luteal"]! }
+    @State private var showSettings = false
+    @State private var showSavedRecipes = false
+    @State private var showProfileMenu = false
+    @State private var showTellOna = false
+    @State private var homecraving = ""
+    @FocusState private var cravingFocused: Bool
 
-    // Silently refresh from HealthKit each time the dashboard appears
+    private var phase: CyclePhaseInfo { appState.phaseInfo }
+    private var isComposed: Bool { !appState.dailyNourishment.isEmpty }
+
+    private var hasProxy: Bool { !ProxyConfig.proxyURL.contains("your-subdomain") }
+    private var hasAPIKey: Bool { !(UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? "").isEmpty }
+    private var aiEnabled: Bool { hasProxy || hasAPIKey }
+
     private func refreshIfNeeded() {
         guard appState.profile.healthKitConnected else { return }
         Task { await appState.loadCycleData() }
     }
 
-    @State private var showSettings = false
-    @State private var showSavedRecipes = false
-    @State private var showProfileMenu = false
-    @State private var nourishmentTab: NourishmentTab = .daily
-
-    private var hasProxy: Bool {
-        !ProxyConfig.proxyURL.contains("your-subdomain")
-    }
-    private var hasAPIKey: Bool {
-        !(UserDefaults.standard.string(forKey: "anthropicAPIKey") ?? "").isEmpty
-    }
-    private var aiEnabled: Bool { hasProxy || hasAPIKey }
-
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                profileHeader
-                dateGreetingHeader
-                phaseBar
-                phaseCard
-                divider(32)
-                moodCheckIn
-                divider(32)
-                nourishmentSection
-                divider(24)
-                footer
-                Spacer().frame(height: 60)
+        ZStack(alignment: .bottom) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    topBar
+                    greetingHeader
+                    Spacer().frame(height: 32)
+
+                    if isComposed {
+                        composedFromSection
+                        Spacer().frame(height: 16)
+                        if !appState.dailySummary.isEmpty {
+                            onaReadCard
+                            Spacer().frame(height: 24)
+                        }
+                    } else {
+                        timeline
+                        Spacer().frame(height: 8)
+                        if aiEnabled { composeCTA }
+                        Spacer().frame(height: 24)
+                    }
+
+                    recipesSection
+                    Spacer().frame(height: 80)
+                }
             }
+            .scrollDismissesKeyboard(.interactively)
+
+            tabBar
         }
-        .scrollDismissesKeyboard(.interactively)
         .background(Color.lCream.ignoresSafeArea())
         .onAppear {
             refreshIfNeeded()
@@ -54,33 +61,32 @@ struct HomeScreen: View {
             }
         }
         .sheet(isPresented: $showSavedRecipes) {
-            SavedRecipesLibrarySheet()
-                .environmentObject(appState)
+            SavedRecipesLibrarySheet().environmentObject(appState)
         }
         .sheet(isPresented: $showSettings) {
-            SettingsScreen()
-                .environmentObject(appState)
+            SettingsScreen().environmentObject(appState)
+        }
+        .sheet(isPresented: $showTellOna) {
+            TellOnaSheet().environmentObject(appState)
         }
     }
 
-    // MARK: - Profile header row (above moon strip)
-    var profileHeader: some View {
-        HStack {
+    // MARK: - Top bar
+    var topBar: some View {
+        HStack(alignment: .center) {
+            Text(shortDateString)
+                .font(LFont.mono(10))
+                .tracking(1)
+                .foregroundColor(.lInk3)
             Spacer()
             Button { showProfileMenu = true } label: {
                 ZStack {
                     Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [Color.lPlum.opacity(0.22), Color.lPlum.opacity(0.09)],
-                                center: UnitPoint(x: 0.35, y: 0.3),
-                                startRadius: 1,
-                                endRadius: 16
-                            )
-                        )
+                        .fill(RadialGradient(
+                            colors: [Color.lPlum.opacity(0.22), Color.lPlum.opacity(0.09)],
+                            center: UnitPoint(x: 0.35, y: 0.3), startRadius: 1, endRadius: 16))
                         .frame(width: 32, height: 32)
                         .overlay(Circle().stroke(Color.lPlum.opacity(0.25), lineWidth: 1))
-
                     Text(appState.profile.name.prefix(1).uppercased())
                         .font(LFont.display(15))
                         .foregroundColor(.lPlum)
@@ -93,370 +99,663 @@ struct HomeScreen: View {
             }
         }
         .padding(.horizontal, 24)
-        .padding(.top, 8)
-        .padding(.bottom, 10)
+        .padding(.top, 14)
+        .padding(.bottom, 4)
     }
 
-    // MARK: - Date + greeting header
-    var dateGreetingHeader: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(greetingText)
-                .font(LFont.display(28))
-                .foregroundColor(.lInk)
-                .lineSpacing(2)
-            Text(todayDateString)
-                .font(LFont.mono(11))
-                .tracking(0.8)
-                .foregroundColor(.lInk3)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 24)
-        .padding(.bottom, 22)
-    }
-
-    private var greetingText: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        let name = appState.profile.name
-        let base: String
-        switch hour {
-        case 0..<12: base = "Good morning"
-        case 12..<17: base = "Good afternoon"
-        default:     base = "Good evening"
-        }
-        return name.isEmpty ? base : "\(base), \(name)"
-    }
-
-    private var todayDateString: String {
-        let f = DateFormatter()
-        f.dateFormat = "EEEE d MMMM"
-        return f.string(from: Date())
-    }
-
-    // MARK: - Phase bar (moon + phase name + strip)
-    var phaseBar: some View {
-        VStack(alignment: .center, spacing: 10) {
-            MoonView(
-                phase: phase.phase,
-                size: 112,
-                litColor: Color.lPlumDeep,
-                darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07),
-                showCraters: true,
-                showGlow: false,
-                craterColor: Color(red: 245/255, green: 240/255, blue: 232/255).opacity(0.3)
-            )
-
-            Text(phase.name)
-                .font(LFont.display(22))
-                .foregroundColor(.lInk)
-
-            Text("Day \(appState.cycleDay) of \(appState.cycleLength)")
-                .font(LFont.mono(11))
-                .tracking(0.8)
-                .foregroundColor(.lInk3)
-
-            Spacer().frame(height: 4)
-
-            FourPhaseStrip(currentDay: appState.cycleDay, cycleLength: appState.cycleLength)
-                .frame(maxWidth: .infinity)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 24)
-    }
-
-    // MARK: - Phase card (always open, plum themed)
-    var phaseCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            if let explainer = phaseExplainer[phase.name] {
-                Text(explainer)
-                    .font(LFont.body(13.5))
-                    .foregroundColor(.lPlumDeep)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            if let foods = phaseFoods[phase.name] {
-                FlowLayout(spacing: 6) {
-                    ForEach(foods, id: \.self) { food in
-                        Text(food)
-                            .font(LFont.body(12))
-                            .foregroundColor(.lPlum)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Color.lPlum.opacity(0.08))
-                            .clipShape(Capsule())
-                            .overlay(Capsule().stroke(Color.lPlum.opacity(0.2), lineWidth: 1))
-                    }
-                }
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.lPlum.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .stroke(Color.lPlum.opacity(0.15), lineWidth: 1))
-        .padding(.horizontal, 24)
-        .padding(.top, 16)
-    }
-
-    // MARK: - Mood check-in
-    var moodCheckIn: some View {
+    // MARK: - Greeting
+    var greetingHeader: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let mood = appState.dailyLog.mood {
-                // Collapsed state — mood chip + edit + response text
-                HStack(spacing: 6) {
-                    Text(mood)
-                        .font(LFont.body(12, weight: .medium))
-                        .foregroundColor(.lPlum)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.lPlum.opacity(0.08))
-                        .clipShape(Capsule())
-                        .overlay(Capsule().stroke(Color.lPlum.opacity(0.2), lineWidth: 1))
+            Text(greetingLine)
+                .font(LFont.display(38))
+                .foregroundColor(.lInk)
+            let name = appState.profile.name
+            if !name.isEmpty {
+                Text(name + ".")
+                    .font(LFont.display(38, italic: true))
+                    .foregroundColor(.lInk)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 2)
+    }
 
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.18)) {
-                            appState.dailyLog.mood = nil
+    private var greetingLine: String {
+        let h = Calendar.current.component(.hour, from: Date())
+        switch h {
+        case 0..<12: return "Good morning,"
+        case 12..<17: return "Good afternoon,"
+        default:     return "Good evening,"
+        }
+    }
+
+    private var shortDateString: String {
+        let f = DateFormatter()
+        f.dateFormat = "EEE · d MMM"
+        return f.string(from: Date()).uppercased()
+    }
+
+    // MARK: - Timeline feed
+    var timeline: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            moodRow
+            phaseRow
+            seasonRow
+            kitchenRow
+            cravingRow
+        }
+    }
+
+    // MARK: MOOD row
+    var moodRow: some View {
+        HStack(alignment: .top, spacing: 0) {
+            threadColumn(dot: Color.lPlum, isLast: false)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Eyebrow("Mood")
+                if let mood = appState.dailyLog.mood {
+                    HStack(spacing: 8) {
+                        Text(mood)
+                            .font(LFont.display(22))
+                            .foregroundColor(.lInk)
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.18)) { appState.dailyLog.mood = nil }
+                        } label: {
+                            Text("edit")
+                                .font(LFont.body(12))
+                                .foregroundColor(.lInk3)
                         }
-                    } label: {
-                        Text("edit")
-                            .font(LFont.body(12))
-                            .foregroundColor(.lInk3)
                     }
-                }
-
-                Spacer().frame(height: 10)
-
-                Text(moodResponse(mood))
-                    .font(LFont.body(13))
-                    .foregroundColor(.lInk2)
-                    .lineSpacing(3)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.lInk.opacity(0.06))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            } else {
-                // Expanded state — full check-in UI
-                Eyebrow("Check-in")
-                Spacer().frame(height: 10)
-                SectionHeader(title: appState.profile.name.isEmpty ? "How are you feeling?" : "\(appState.profile.name), how are you feeling?")
-
-                HStack(spacing: 8) {
-                    ForEach(["Steady", "Tender", "Tired", "Bright", "Bloated"], id: \.self) { m in
-                        MoodOptionButton(label: m, selected: false) {
-                            withAnimation(.easeInOut(duration: 0.18)) {
-                                appState.dailyLog.mood = m
+                    Text(moodSubtext(mood))
+                        .font(LFont.body(13))
+                        .italic()
+                        .foregroundColor(.lInk2)
+                } else {
+                    Text("How are you feeling today?")
+                        .font(LFont.display(22, italic: true))
+                        .foregroundColor(.lInk2)
+                    Spacer().frame(height: 6)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(["Steady", "Tender", "Tired", "Bright", "Bloated"], id: \.self) { m in
+                                Button {
+                                    withAnimation(.easeInOut(duration: 0.18)) { appState.dailyLog.mood = m }
+                                } label: {
+                                    Text(m)
+                                        .font(LFont.body(13))
+                                        .foregroundColor(.lInk)
+                                        .padding(.horizontal, 16)
+                                        .frame(height: 38)
+                                        .background(Color.lPaper)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                            .stroke(Color.lRule, lineWidth: 1))
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
                 }
             }
+            .padding(.leading, 16)
+            .padding(.bottom, 24)
+
+            Spacer(minLength: 8)
+
+            Image(systemName: "face.smiling")
+                .font(.system(size: 22, weight: .light))
+                .foregroundColor(.lPlum.opacity(0.35))
+                .padding(.top, 4)
+                .padding(.trailing, 24)
         }
-        .padding(.horizontal, 24)
         .animation(.easeInOut(duration: 0.18), value: appState.dailyLog.mood)
     }
 
-    private func moodResponse(_ mood: String) -> String {
+    // MARK: PHASE row
+    var phaseRow: some View {
+        HStack(alignment: .top, spacing: 0) {
+            threadColumn(dot: Color.lTerracotta, isLast: false)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Eyebrow("Phase")
+                Text("\(phase.name) · day \(appState.cycleDay) of \(appState.cycleLength)")
+                    .font(LFont.display(22))
+                    .foregroundColor(.lInk)
+                if let tagline = phaseTaglines[phase.name] {
+                    Text(tagline)
+                        .font(LFont.body(13))
+                        .foregroundColor(.lInk3)
+                }
+            }
+            .padding(.leading, 16)
+            .padding(.bottom, 24)
+
+            Spacer(minLength: 8)
+
+            MoonIcon(
+                phase: phase.phase,
+                size: 28,
+                litColor: .lPlumDeep,
+                darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07)
+            )
+            .padding(.top, 4)
+            .padding(.trailing, 24)
+        }
+    }
+
+    // MARK: SEASON row
+    var seasonRow: some View {
+        let season = appState.currentSeason()
+        return HStack(alignment: .top, spacing: 0) {
+            threadColumn(dot: Color.lSage, isLast: false)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Eyebrow("Season")
+                Text(season.capitalized)
+                    .font(LFont.display(22))
+                    .foregroundColor(.lInk)
+                if let tagline = seasonTaglines[season] {
+                    Text(tagline)
+                        .font(LFont.body(13))
+                        .foregroundColor(.lInk3)
+                }
+            }
+            .padding(.leading, 16)
+            .padding(.bottom, 24)
+
+            Spacer(minLength: 8)
+
+            Image(systemName: seasonIcon(season))
+                .font(.system(size: 22, weight: .light))
+                .foregroundColor(.lSage.opacity(0.6))
+                .padding(.top, 4)
+                .padding(.trailing, 24)
+        }
+    }
+
+    // MARK: KITCHEN row
+    var kitchenRow: some View {
+        HStack(alignment: .top, spacing: 0) {
+            threadColumn(dot: Color.lTerracottaDeep, isLast: false)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Eyebrow("Kitchen")
+                    Button { showSettings = true } label: {
+                        HStack(spacing: 3) {
+                            Image(systemName: "pencil")
+                                .font(.system(size: 9, weight: .medium))
+                            Text("edit")
+                                .font(LFont.mono(9))
+                                .tracking(0.5)
+                        }
+                        .foregroundColor(.lInk3)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Color.lCream2)
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+                    }
+                }
+
+                let diet = appState.profile.diet
+                if diet.isEmpty {
+                    Text("No restrictions")
+                        .font(LFont.display(22, italic: true))
+                        .foregroundColor(.lInk2)
+                } else {
+                    Text(diet[0])
+                        .font(LFont.display(22))
+                        .foregroundColor(.lInk)
+                    let rest = Array(diet.dropFirst()) + appState.profile.cookingStyles
+                    if !rest.isEmpty {
+                        Text(rest.joined(separator: " · "))
+                            .font(LFont.body(13))
+                            .foregroundColor(.lInk3)
+                    }
+                }
+            }
+            .padding(.leading, 16)
+            .padding(.bottom, 24)
+
+            Spacer(minLength: 8)
+
+            Image(systemName: "fork.knife")
+                .font(.system(size: 20, weight: .light))
+                .foregroundColor(.lTerracottaDeep.opacity(0.5))
+                .padding(.top, 4)
+                .padding(.trailing, 24)
+        }
+    }
+
+    // MARK: CRAVING row
+    var cravingRow: some View {
+        HStack(alignment: .top, spacing: 0) {
+            threadColumn(dot: Color(hex: "c9a85c"), isLast: true)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Eyebrow("Craving")
+                HStack(spacing: 6) {
+                    if homecraving.isEmpty {
+                        Image(systemName: "plus")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.lInk3)
+                    }
+                    TextField("Anything you're craving?", text: $homecraving)
+                        .font(LFont.display(20, italic: true))
+                        .foregroundColor(.lInk)
+                        .focused($cravingFocused)
+                        .autocorrectionDisabled()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Color.lPaper)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(cravingFocused ? Color.lPlum.opacity(0.3) : Color.lRule, lineWidth: 1))
+            }
+            .padding(.leading, 16)
+            .padding(.bottom, 8)
+            .padding(.trailing, 8)
+
+            Image(systemName: "heart")
+                .font(.system(size: 20, weight: .light))
+                .foregroundColor(Color(hex: "c9a85c").opacity(0.5))
+                .padding(.top, 4)
+                .padding(.trailing, 24)
+        }
+    }
+
+    // MARK: - Thread column (dot + connecting line)
+    @ViewBuilder
+    private func threadColumn(dot: Color, isLast: Bool) -> some View {
+        VStack(spacing: 0) {
+            Circle()
+                .fill(dot)
+                .frame(width: 8, height: 8)
+                .padding(.top, 5)
+            if !isLast {
+                Rectangle()
+                    .fill(Color.lInk.opacity(0.1))
+                    .frame(width: 1)
+                    .frame(maxHeight: .infinity)
+            }
+        }
+        .frame(width: 8)
+        .padding(.leading, 24)
+    }
+
+    // MARK: - Compose CTA (end of timeline)
+    var composeCTA: some View {
+        HStack(alignment: .top, spacing: 0) {
+            VStack(spacing: 0) {
+                ZStack {
+                    Circle()
+                        .stroke(Color.lInk.opacity(0.15), lineWidth: 1)
+                        .frame(width: 12, height: 12)
+                    Image(systemName: "plus")
+                        .font(.system(size: 7, weight: .bold))
+                        .foregroundColor(.lInk3)
+                }
+                .padding(.top, 2)
+            }
+            .frame(width: 12)
+            .padding(.leading, 21)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Eyebrow("Ready when you are")
+                    .padding(.top, 1)
+
+                Button {
+                    cravingFocused = false
+                    Task { await appState.loadDailyNourishment(craving: homecraving) }
+                } label: {
+                    Text("Compose today's meals")
+                        .font(LFont.body(15, weight: .medium))
+                        .foregroundColor(.lCream)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.lPlum)
+                        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+                }
+
+                Text(appState.dailyLog.mood == nil
+                    ? "Pick a mood — add a craving first, if you like."
+                    : "Add a craving if you like, then compose.")
+                    .font(LFont.body(12))
+                    .foregroundColor(.lInk3)
+                    .italic()
+            }
+            .padding(.leading, 14)
+            .padding(.trailing, 24)
+        }
+    }
+
+    // MARK: - Composed from section
+    var composedFromSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("COMPOSED FROM")
+                    .font(LFont.mono(9.5))
+                    .tracking(1.2)
+                    .foregroundColor(.lInk3)
+                Spacer()
+                Button { appState.clearNourishmentCache() } label: {
+                    Text("TAP TO ADJUST")
+                        .font(LFont.mono(9.5))
+                        .tracking(1.2)
+                        .foregroundColor(.lInk3)
+                }
+            }
+
+            FlowLayout(spacing: 8) {
+                if let mood = appState.dailyLog.mood {
+                    composedChip(dot: .lPlum, label: mood, editable: true) {
+                        appState.clearNourishmentCache()
+                        withAnimation { appState.dailyLog.mood = nil }
+                    }
+                }
+                composedChip(dot: .lTerracotta,
+                    label: "\(phase.name) · \(appState.cycleDay)/\(appState.cycleLength)",
+                    editable: false) {}
+                composedChip(dot: .lSage, label: appState.currentSeason().capitalized, editable: false) {}
+                if let firstDiet = appState.profile.diet.first {
+                    composedChip(dot: .lTerracottaDeep, label: firstDiet, editable: true) {
+                        showSettings = true
+                    }
+                }
+                if !homecraving.isEmpty {
+                    composedChip(dot: Color(hex: "c9a85c"), label: ""\(homecraving)"", editable: true) {
+                        homecraving = ""
+                        appState.clearNourishmentCache()
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 24)
+    }
+
+    private func composedChip(dot: Color, label: String, editable: Bool, onEdit: @escaping () -> Void) -> some View {
+        HStack(spacing: 6) {
+            Circle().fill(dot).frame(width: 6, height: 6)
+            Text(label)
+                .font(LFont.body(13))
+                .foregroundColor(.lInk)
+            if editable {
+                Button(action: onEdit) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.lInk3)
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.lPaper)
+        .clipShape(Capsule())
+        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+    }
+
+    // MARK: - Ona's Read for Today
+    var onaReadCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.12))
+                        .frame(width: 20, height: 20)
+                    Image(systemName: "plus")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.white.opacity(0.65))
+                }
+                Text("ONA'S READ FOR TODAY")
+                    .font(LFont.mono(9.5))
+                    .tracking(1.2)
+                    .foregroundColor(.white.opacity(0.55))
+            }
+            Text(appState.dailySummary)
+                .font(LFont.display(20, italic: true))
+                .foregroundColor(Color(hex: "f5f0e8"))
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(red: 42/255, green: 37/255, blue: 32/255))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .padding(.horizontal, 24)
+    }
+
+    // MARK: - Recipes section
+    var recipesSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Today's meals")
+                    .font(LFont.display(22))
+                    .foregroundColor(.lInk)
+                Spacer()
+                Group {
+                    if appState.nourishmentLoading {
+                        Text("LOADING")
+                            .foregroundColor(.lInk3)
+                    } else if isComposed {
+                        Text("COMPOSED")
+                            .foregroundColor(.lPlum)
+                    } else {
+                        Text("AWAITING")
+                            .foregroundColor(.lInk3)
+                    }
+                }
+                .font(LFont.mono(9.5))
+                .tracking(1.2)
+            }
+            .padding(.horizontal, 24)
+
+            Spacer().frame(height: 16)
+
+            if appState.nourishmentLoading && appState.dailyNourishment.isEmpty {
+                HStack(spacing: 12) {
+                    SpinnerView()
+                    Text("Composing your meals…")
+                        .font(LFont.body(14))
+                        .italic()
+                        .foregroundColor(.lInk2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+                .cardStyle()
+                .padding(.horizontal, 24)
+            } else if let err = appState.nourishmentError {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Couldn't compose meals")
+                        .font(LFont.body(13, weight: .medium))
+                        .foregroundColor(.lRed)
+                    Text(err)
+                        .font(LFont.body(12))
+                        .foregroundColor(.lRed.opacity(0.7))
+                        .lineSpacing(2)
+                    Button {
+                        appState.nourishmentError = nil
+                        Task { await appState.loadDailyNourishment(craving: homecraving) }
+                    } label: {
+                        Text("Try again")
+                            .font(LFont.body(12.5, weight: .medium))
+                            .foregroundColor(.lPlum)
+                    }
+                    .padding(.top, 2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+                .cardStyle()
+                .padding(.horizontal, 24)
+            } else if !appState.dailyNourishment.isEmpty {
+                recipeListCard(appState.dailyNourishment)
+            } else if !aiEnabled {
+                recipeListCard(defaultRecipes[phase.name] ?? [])
+            }
+        }
+    }
+
+    private func recipeListCard(_ recipes: [Recipe]) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(recipes.enumerated()), id: \.element.id) { i, recipe in
+                NourishmentListRow(recipe: recipe, currentPhase: phase.name)
+                if i < recipes.count - 1 {
+                    Divider()
+                        .background(Color.lRule)
+                        .padding(.leading, 76)
+                }
+            }
+        }
+        .background(Color.lPaper)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .stroke(Color.lRule, lineWidth: 1))
+        .padding(.horizontal, 24)
+    }
+
+    // MARK: - Tab bar
+    var tabBar: some View {
+        HStack(spacing: 0) {
+            tabBarItem(icon: "sun.horizon", label: "TODAY", active: true) {}
+            tabBarItem(icon: "bookmark", label: "SAVED", active: false) { showSavedRecipes = true }
+            tabBarItem(icon: "person", label: "YOU", active: false) { showSettings = true }
+        }
+        .background(Color.lCream.overlay(
+            Rectangle().fill(Color.lRule.opacity(0.5)).frame(height: 0.5), alignment: .top))
+    }
+
+    private func tabBarItem(icon: String, label: String, active: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: active ? .light : .ultraLight))
+                    .foregroundColor(active ? .lInk : .lInk3)
+                Text(label)
+                    .font(LFont.mono(9))
+                    .tracking(1.2)
+                    .foregroundColor(active ? .lInk : .lInk3)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 60)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Helpers
+    private func moodSubtext(_ mood: String) -> String {
         switch mood {
-        case "Bloated":  return "Got it — we'll lean on fennel, ginger, and lighter proteins today."
-        case "Tired":    return "Today's picks will lean heavier on iron and complex carbs."
-        case "Tender":   return "Warming, magnesium-rich meals coming up. Soft on the system."
-        case "Steady":   return "Lovely. We'll stay the course with \(phase.name.lowercased())-friendly staples."
-        case "Bright":   return "Beautiful — riding the wave. We'll keep things balanced."
+        case "Bloated":  return "Lighter today — fennel and ginger."
+        case "Tired":    return "Iron and slow carbs to carry you through."
+        case "Tender":   return "Warming and easy on the system."
+        case "Steady":   return "On course — staying \(phase.name.lowercased())-aligned."
+        case "Bright":   return "Riding the wave beautifully."
         default:         return ""
         }
     }
 
-    // MARK: - Nourishment
-    var nourishmentSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Eyebrow("Nourishment")
-                .padding(.horizontal, 24)
-                .padding(.bottom, 10)
+    private func seasonIcon(_ season: String) -> String {
+        switch season {
+        case "spring": return "leaf.fill"
+        case "summer": return "sun.max.fill"
+        case "autumn": return "cloud.sun.fill"
+        default:       return "snowflake"
+        }
+    }
+}
 
-            // Display-size tab headers
-            if aiEnabled {
-                HStack(alignment: .bottom, spacing: 24) {
-                    tabHeader("Today's meals", tab: .daily)
-                    tabHeader("Tell Ona", tab: .crave)
+// MARK: - Tell Ona sheet
+struct TellOnaSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            Color.lCream.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Spacer().frame(height: 80)
+                    CraveSearchSection(embedded: true)
                 }
                 .padding(.horizontal, 24)
-                .padding(.bottom, 20)
-            } else {
-                Text("Today's meals")
+            }
+            HStack {
+                Text("Ask Ona")
                     .font(LFont.display(22))
                     .foregroundColor(.lInk)
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 20)
-            }
-
-            // Tab content
-            if nourishmentTab == .daily {
-                if appState.nourishmentLoading && appState.dailyNourishment.isEmpty {
-                    HStack(spacing: 12) {
-                        SpinnerView()
-                        Text("Preparing today's meals…")
-                            .font(LFont.body(14))
-                            .italic()
-                            .foregroundColor(.lInk2)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
-                    .cardStyle()
-                    .padding(.horizontal, 24)
-                } else if let err = appState.nourishmentError {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Couldn't load meals")
-                            .font(LFont.body(13, weight: .medium))
-                            .foregroundColor(.lRed)
-                        Text(err)
-                            .font(LFont.body(12))
-                            .foregroundColor(.lRed.opacity(0.7))
-                            .lineSpacing(2)
-                        Button {
-                            appState.nourishmentError = nil
-                            Task { await appState.loadDailyNourishment() }
-                        } label: {
-                            Text("Try again")
-                                .font(LFont.body(12.5, weight: .medium))
-                                .foregroundColor(.lPlum)
-                        }
-                        .padding(.top, 2)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
-                    .cardStyle()
-                    .padding(.horizontal, 24)
-                } else if appState.dailyNourishment.isEmpty {
-                    if appState.dailyLog.mood != nil {
-                        // Mood set — show compose CTA
-                        composeCTA
-                    } else {
-                        Text("Check in above, then compose your meals for the day.")
-                            .font(LFont.body(14))
-                            .foregroundColor(.lInk3)
-                            .lineSpacing(3)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(20)
-                            .cardStyle()
-                            .padding(.horizontal, 24)
-                    }
-                } else {
-                    composedFromRow
-                    VStack(spacing: 10) {
-                        ForEach(appState.dailyNourishment) { recipe in
-                            NourishmentCard(recipe: recipe, currentPhase: phase.name)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                }
-            } else {
-                CraveSearchSection(embedded: true)
-                    .padding(.horizontal, 24)
-            }
-        }
-        .animation(.easeInOut(duration: 0.18), value: nourishmentTab)
-    }
-
-    // MARK: - Compose CTA (mood set, no recipes yet)
-    var composeCTA: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            FlowLayout(spacing: 6) {
-                ForEach(composeContextChips, id: \.self) { chip in
-                    Text(chip)
-                        .font(LFont.body(11))
-                        .foregroundColor(.lInk2)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(Color.lCream2)
+                Spacer()
+                Button { dismiss() } label: {
+                    Text("Done")
+                        .font(LFont.body(15, weight: .medium))
+                        .foregroundColor(.lPlum)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.lCream)
                         .clipShape(Capsule())
                         .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
                 }
             }
-
-            Button {
-                Task { await appState.loadDailyNourishment() }
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "wand.and.stars")
-                        .font(.system(size: 13, weight: .regular))
-                    Text("Compose today's meals")
-                        .font(LFont.body(15, weight: .medium))
-                }
-                .foregroundColor(.lCream)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(Color.lPlum)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            .background(Color.lCream)
         }
-        .padding(.horizontal, 24)
+        .presentationBackground(Color.lCream)
     }
+}
 
-    // MARK: - Composed from chips (shown above recipe list)
-    var composedFromRow: some View {
-        HStack(spacing: 8) {
-            Text("From")
-                .font(LFont.mono(9.5))
-                .tracking(0.8)
-                .foregroundColor(.lInk3)
+// MARK: - Nourishment list row (in composed recipe card)
+struct NourishmentListRow: View {
+    let recipe: Recipe
+    let currentPhase: String
+    @EnvironmentObject var appState: AppState
+    @State private var showDetail = false
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(composeContextChips, id: \.self) { chip in
-                        Text(chip)
-                            .font(LFont.body(11))
-                            .foregroundColor(.lPlum)
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 4)
-                            .background(Color.lPlum.opacity(0.07))
-                            .clipShape(Capsule())
-                            .overlay(Capsule().stroke(Color.lPlum.opacity(0.18), lineWidth: 1))
-                    }
-                }
-            }
+    var iconColor: Color {
+        switch recipe.icon {
+        case "salmon": return .lTerracottaDeep
+        case "leaf":   return .lSage
+        default:       return .lTerracotta
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 12)
     }
 
-    private var composeContextChips: [String] {
-        var chips = [phase.name, appState.currentSeason().capitalized]
-        if let mood = appState.dailyLog.mood { chips.append(mood) }
-        if !appState.profile.diet.isEmpty { chips.append(contentsOf: appState.profile.diet.prefix(2)) }
-        return chips
-    }
+    var body: some View {
+        Button { showDetail = true } label: {
+            HStack(alignment: .top, spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.lCream)
+                        .frame(width: 44, height: 44)
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(Color.lRule, lineWidth: 1))
+                    FoodIconView(kind: recipe.icon, size: 28, color: iconColor)
+                }
 
-    private func tabHeader(_ label: String, tab: NourishmentTab) -> some View {
-        let active = nourishmentTab == tab
-        return Button {
-            withAnimation(.easeInOut(duration: 0.2)) { nourishmentTab = tab }
-        } label: {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(label)
-                    .font(LFont.display(22))
-                    .foregroundColor(active ? .lInk : .lInk3)
-                Rectangle()
-                    .fill(active ? Color.lPlum : Color.clear)
-                    .frame(height: 2)
-                    .clipShape(Capsule())
+                VStack(alignment: .leading, spacing: 3) {
+                    Eyebrow(recipe.time.uppercased())
+                    Text(recipe.name)
+                        .font(LFont.displayRegular(19))
+                        .foregroundColor(.lInk)
+                        .lineSpacing(2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(recipe.why)
+                        .font(LFont.body(12.5))
+                        .foregroundColor(.lInk2)
+                        .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
             }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.2), value: active)
-    }
-
-    // MARK: - Footer
-    var footer: some View {
-        Eyebrow("Ona · cycle nutrition, shaped for her", color: .lInk3)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, 8)
-    }
-
-    private func divider(_ h: CGFloat) -> some View {
-        Spacer().frame(height: h)
+        .fullScreenCover(isPresented: $showDetail) {
+            RecipeDetailView(recipe: recipe, currentPhase: currentPhase)
+                .environmentObject(appState)
+        }
     }
 }
 

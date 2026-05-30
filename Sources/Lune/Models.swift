@@ -112,6 +112,20 @@ let phaseFoods: [String: [String]] = [
     "Luteal": ["pumpkin seeds", "dark leafy greens", "sweet potato", "salmon", "ginger", "dark chocolate"],
 ]
 
+let phaseTaglines: [String: String] = [
+    "Menstrual":  "rest & replenish",
+    "Follicular": "build & explore",
+    "Ovulatory":  "peak & radiate",
+    "Luteal":     "magnesium & warmth",
+]
+
+let seasonTaglines: [String: String] = [
+    "spring": "light & verdant",
+    "summer": "warm & abundant",
+    "autumn": "earthy & cooling",
+    "winter": "cold & restorative",
+]
+
 struct PhaseDetail {
     let days: String
     let hormones: String

@@ -13,6 +13,7 @@ struct GeneratedRecipeData: Codable {
 }
 
 struct RecipeResponse: Codable {
+    let summary: String?
     let recipes: [GeneratedRecipeData]
 }
 

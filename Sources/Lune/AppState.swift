@@ -30,6 +30,7 @@ class AppState: ObservableObject {
     @Published var nourishmentDate: String = ""
     @Published var nourishmentError: String? = nil
     @Published var recentRecipeNames: [String] = []
+    @Published var dailySummary: String = ""
 
     private let defaults = UserDefaults.standard
     private let encoder = JSONEncoder()
@@ -101,6 +102,7 @@ class AppState: ObservableObject {
            let recipes = try? decoder.decode([Recipe].self, from: data) {
             dailyNourishment = recipes
             nourishmentDate = today
+            dailySummary = defaults.string(forKey: "dailySummary") ?? ""
         }
 
         if let data = defaults.data(forKey: "recentRecipeNames"),
@@ -133,6 +135,7 @@ class AppState: ObservableObject {
         if let data = try? encoder.encode(dailyNourishment) {
             defaults.set(data, forKey: "dailyNourishment")
             defaults.set(nourishmentDate, forKey: "nourishmentDate")
+            defaults.set(dailySummary, forKey: "dailySummary")
         }
         if let data = try? encoder.encode(recentRecipeNames) {
             defaults.set(data, forKey: "recentRecipeNames")
@@ -158,7 +161,7 @@ class AppState: ObservableObject {
 
     // MARK: - Daily nourishment generation
 
-    func loadDailyNourishment() async {
+    func loadDailyNourishment(craving: String = "") async {
         let today = todayString()
         guard nourishmentDate != today || dailyNourishment.isEmpty else { return }
 
@@ -174,6 +177,8 @@ class AppState: ObservableObject {
         let season = currentSeason()
         let avoidClause = recentRecipeNames.isEmpty ? "" :
             "\nAvoid repeating these recently served recipes: \(recentRecipeNames.prefix(14).joined(separator: ", "))."
+        let cravingClause = craving.trimmingCharacters(in: .whitespaces).isEmpty ? "" :
+            "\n- Craving: \"\(craving.trimmingCharacters(in: .whitespaces))\" — work this in where it fits naturally."
 
         let prompt = """
         You are a warm, knowledgeable nutritionist who designs meals around the menstrual cycle.
@@ -185,13 +190,16 @@ class AppState: ObservableObject {
         - Symptoms to address: \(symptoms)
         - Dietary preferences: \(diet)
         - Cooking style & flavour profile: \(cookingStyles)\(cookingStyleNotes.isEmpty ? "" : ". Additional: \(cookingStyleNotes)")
-        - How she feels today: \(mood)\(avoidClause)
+        - How she feels today: \(mood)\(cravingClause)\(avoidClause)
 
         Each recipe should be doable in 30 minutes or less and specifically suited to the \(phase.name) phase. Vary the meal timing: one morning, one midday, one evening.
+
+        Also write a "summary": one warm, italic-ready sentence (max 12 words) describing the overall nutritional approach for today.
 
         Respond with ONLY a valid JSON object — no prose, no markdown, no code fences:
 
         {
+          "summary": "one warm sentence describing today's nutritional approach",
           "recipes": [
             {
               "name": "short evocative name (max 6 words)",
@@ -221,6 +229,7 @@ class AppState: ObservableObject {
                        phase: phase.name)
             }
             dailyNourishment = newRecipes
+            dailySummary = decoded.summary ?? ""
             nourishmentDate = today
             let newNames = newRecipes.map { $0.name }
             recentRecipeNames = Array((newNames + recentRecipeNames).prefix(21))
@@ -243,6 +252,7 @@ class AppState: ObservableObject {
     func clearNourishmentCache() {
         dailyNourishment = []
         nourishmentDate = ""
+        dailySummary = ""
     }
 
     // MARK: - HealthKit connect flow
