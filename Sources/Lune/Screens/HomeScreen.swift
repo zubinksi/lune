@@ -6,7 +6,6 @@ struct HomeScreen: View {
 
     @State private var showSettings = false
     @State private var showSavedRecipes = false
-    @State private var showProfileMenu = false
     @State private var showTellOna = false
     @State private var homecraving = ""
     @FocusState private var cravingFocused: Bool
@@ -73,34 +72,14 @@ struct HomeScreen: View {
 
     // MARK: - Top bar
     var topBar: some View {
-        HStack(alignment: .center) {
-            Text(shortDateString)
-                .font(LFont.mono(10))
-                .tracking(1)
-                .foregroundColor(.lInk3)
-            Spacer()
-            Button { showProfileMenu = true } label: {
-                ZStack {
-                    Circle()
-                        .fill(RadialGradient(
-                            colors: [Color.lPlum.opacity(0.22), Color.lPlum.opacity(0.09)],
-                            center: UnitPoint(x: 0.35, y: 0.3), startRadius: 1, endRadius: 16))
-                        .frame(width: 32, height: 32)
-                        .overlay(Circle().stroke(Color.lPlum.opacity(0.25), lineWidth: 1))
-                    Text(appState.profile.name.prefix(1).uppercased())
-                        .font(LFont.display(15))
-                        .foregroundColor(.lPlum)
-                }
-            }
-            .confirmationDialog("", isPresented: $showProfileMenu, titleVisibility: .hidden) {
-                Button("Saved Recipes") { showSavedRecipes = true }
-                Button("Settings") { showSettings = true }
-                Button("Cancel", role: .cancel) { }
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 14)
-        .padding(.bottom, 4)
+        Text(appState.currentSeason().uppercased())
+            .font(LFont.mono(10))
+            .tracking(1.2)
+            .foregroundColor(.lInk3)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 24)
+            .padding(.top, 14)
+            .padding(.bottom, 4)
     }
 
     // MARK: - Greeting
@@ -129,18 +108,11 @@ struct HomeScreen: View {
         }
     }
 
-    private var shortDateString: String {
-        let f = DateFormatter()
-        f.dateFormat = "EEE · d MMM"
-        return f.string(from: Date()).uppercased()
-    }
-
     // MARK: - Timeline feed
     var timeline: some View {
         VStack(alignment: .leading, spacing: 0) {
             moodRow
             phaseRow
-            seasonRow
             kitchenRow
             cravingRow
         }
@@ -240,36 +212,6 @@ struct HomeScreen: View {
             )
             .padding(.top, 4)
             .padding(.trailing, 24)
-        }
-    }
-
-    // MARK: SEASON row
-    var seasonRow: some View {
-        let season = appState.currentSeason()
-        return HStack(alignment: .top, spacing: 0) {
-            threadColumn(dot: Color.lSage, isLast: false)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Eyebrow("Season")
-                Text(season.capitalized)
-                    .font(LFont.display(22))
-                    .foregroundColor(.lInk)
-                if let tagline = seasonTaglines[season] {
-                    Text(tagline)
-                        .font(LFont.body(13))
-                        .foregroundColor(.lInk3)
-                }
-            }
-            .padding(.leading, 16)
-            .padding(.bottom, 24)
-
-            Spacer(minLength: 8)
-
-            Image(systemName: seasonIcon(season))
-                .font(.system(size: 22, weight: .light))
-                .foregroundColor(.lSage.opacity(0.6))
-                .padding(.top, 4)
-                .padding(.trailing, 24)
         }
     }
 
@@ -654,14 +596,6 @@ struct HomeScreen: View {
         }
     }
 
-    private func seasonIcon(_ season: String) -> String {
-        switch season {
-        case "spring": return "leaf.fill"
-        case "summer": return "sun.max.fill"
-        case "autumn": return "cloud.sun.fill"
-        default:       return "snowflake"
-        }
-    }
 }
 
 // MARK: - Tell Ona sheet
