@@ -407,7 +407,7 @@ struct HomeScreen: View {
                     }
                 }
                 if !homecraving.isEmpty {
-                    composedChip(dot: Color(hex: "c9a85c"), label: ""\(homecraving)"", editable: true) {
+                    composedChip(dot: Color(hex: "c9a85c"), label: "\u{201C}\(homecraving)\u{201D}", editable: true) {
                         homecraving = ""
                         appState.clearNourishmentCache()
                     }

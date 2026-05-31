@@ -24,6 +24,7 @@
 		A1000001000018000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000001000018000000001 /* Assets.xcassets */; };
 		A1000001000019000000001 /* HealthKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000019000000001 /* HealthKitManager.swift */; };
 		A1000001000020000000001 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000020000000001 /* SettingsScreen.swift */; };
+		A1000001000021000000001 /* RecipeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000021000000001 /* RecipeDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +48,7 @@
 		A2000001000018000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A2000001000019000000001 /* HealthKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitManager.swift; sourceTree = "<group>"; };
 		A2000001000020000000001 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		A2000001000021000000001 /* RecipeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,6 +116,7 @@
 				A2000001000012000000001 /* HomeScreen.swift */,
 				A2000001000013000000001 /* CraveSearch.swift */,
 				A2000001000020000000001 /* SettingsScreen.swift */,
+				A2000001000021000000001 /* RecipeDetailView.swift */,
 			);
 			path = Screens;
 			sourceTree = "<group>";
@@ -229,6 +232,7 @@
 				A1000001000013000000001 /* CraveSearch.swift in Sources */,
 				A1000001000019000000001 /* HealthKitManager.swift in Sources */,
 				A1000001000020000000001 /* SettingsScreen.swift in Sources */,
+				A1000001000021000000001 /* RecipeDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
