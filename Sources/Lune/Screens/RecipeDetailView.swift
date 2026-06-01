@@ -9,6 +9,8 @@ struct RecipeDetailView: View {
     @State private var tweakedRecipe: Recipe? = nil
     @State private var tweakText = ""
     @State private var tweakLoading = false
+    @State private var showShareSheet = false
+    @State private var shareImage: UIImage? = nil
 
     var display: Recipe { tweakedRecipe ?? recipe }
 
@@ -221,7 +223,7 @@ struct RecipeDetailView: View {
                     }
                     .animation(.easeInOut(duration: 0.15), value: isSaved)
 
-                    ShareLink(item: recipeShareText(display)) {
+                    Button { renderShareCard() } label: {
                         Image(systemName: "square.and.arrow.up")
                             .font(.system(size: 15, weight: .regular))
                             .foregroundColor(.lInk2)
@@ -237,6 +239,23 @@ struct RecipeDetailView: View {
             .background(Color.lCream)
         }
         .presentationBackground(Color.lCream)
+        .sheet(isPresented: $showShareSheet) {
+            if let img = shareImage {
+                ShareSheet(items: [img])
+                    .ignoresSafeArea()
+            }
+        }
+    }
+
+    @MainActor
+    private func renderShareCard() {
+        let card = RecipeShareCard(recipe: display, phase: currentPhase)
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = 3.0
+        if let image = renderer.uiImage {
+            shareImage = image
+            showShareSheet = true
+        }
     }
 
     @MainActor
@@ -266,4 +285,181 @@ struct RecipeDetailView: View {
         } catch { }
         tweakLoading = false
     }
+}
+
+// MARK: - Recipe share card (rendered to UIImage via ImageRenderer)
+
+struct RecipeShareCard: View {
+    let recipe: Recipe
+    let phase: String
+
+    private var iconColor: Color {
+        switch recipe.icon {
+        case "salmon": return .lTerracottaDeep
+        case "leaf":   return .lSage
+        default:       return .lTerracotta
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header bar
+            HStack {
+                Text("ONA")
+                    .font(LFont.mono(11))
+                    .tracking(2)
+                    .foregroundColor(.lInk)
+                Spacer()
+                HStack(spacing: 5) {
+                    Text(phase)
+                        .font(LFont.mono(9))
+                        .tracking(0.8)
+                        .foregroundColor(.lPlum)
+                    Text("·")
+                        .font(LFont.mono(9))
+                        .foregroundColor(.lInk3)
+                    Text(recipe.time)
+                        .font(LFont.mono(9))
+                        .tracking(0.8)
+                        .foregroundColor(.lInk3)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color.lPlum.opacity(0.07))
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(Color.lPlum.opacity(0.15), lineWidth: 1))
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 28)
+            .padding(.bottom, 20)
+
+            // Divider
+            Rectangle()
+                .fill(Color.lRule)
+                .frame(height: 1)
+                .padding(.horizontal, 24)
+
+            // Icon
+            HStack {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(Color.lPaper)
+                        .frame(width: 72, height: 72)
+                        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(Color.lRule, lineWidth: 1))
+                    FoodIconView(kind: recipe.icon, size: 46, color: iconColor)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+
+            // Recipe name
+            Text(recipe.name)
+                .font(LFont.display(28))
+                .foregroundColor(.lInk)
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 24)
+                .padding(.top, 16)
+
+            // Why
+            if !recipe.why.isEmpty {
+                Text(recipe.why)
+                    .font(LFont.body(13))
+                    .italic()
+                    .foregroundColor(.lInk2)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 8)
+            }
+
+            // Ingredients
+            if !recipe.ingredients.isEmpty {
+                Text("Ingredients".uppercased())
+                    .font(LFont.mono(9))
+                    .tracking(1.4)
+                    .foregroundColor(.lInk3)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+
+                VStack(alignment: .leading, spacing: 7) {
+                    ForEach(recipe.ingredients, id: \.self) { item in
+                        HStack(alignment: .top, spacing: 10) {
+                            Circle()
+                                .fill(Color.lTerracotta)
+                                .frame(width: 4, height: 4)
+                                .padding(.top, 6)
+                            Text(item)
+                                .font(LFont.body(13))
+                                .foregroundColor(.lInk2)
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 10)
+            }
+
+            // Steps
+            if !recipe.steps.isEmpty {
+                Text("How to make it".uppercased())
+                    .font(LFont.mono(9))
+                    .tracking(1.4)
+                    .foregroundColor(.lInk3)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Array(recipe.steps.enumerated()), id: \.offset) { i, step in
+                        HStack(alignment: .top, spacing: 12) {
+                            Text(String(format: "%02d", i + 1))
+                                .font(LFont.mono(10))
+                                .tracking(1)
+                                .foregroundColor(.lInk3)
+                                .padding(.top, 2)
+                            Text(step)
+                                .font(LFont.body(13))
+                                .foregroundColor(.lInk2)
+                                .lineSpacing(3)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 10)
+            }
+
+            // Footer
+            Rectangle()
+                .fill(Color.lRule)
+                .frame(height: 1)
+                .padding(.horizontal, 24)
+                .padding(.top, 28)
+
+            Text("Made with Ona · cycle-aware nourishment")
+                .font(LFont.mono(9))
+                .tracking(0.8)
+                .foregroundColor(.lInk3)
+                .padding(.horizontal, 24)
+                .padding(.top, 12)
+                .padding(.bottom, 24)
+        }
+        .frame(width: 375)
+        .background(Color.lCream)
+    }
+}
+
+// MARK: - Share sheet wrapper
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

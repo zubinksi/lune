@@ -794,6 +794,8 @@ struct SavedRecipeSheet: View {
     let recipe: Recipe
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) private var dismiss
+    @State private var showShareSheet = false
+    @State private var shareImage: UIImage? = nil
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -854,7 +856,15 @@ struct SavedRecipeSheet: View {
                         Spacer().frame(height: 28)
                     }
 
-                    ShareLink(item: recipeShareText(recipe)) {
+                    Button {
+                        let card = RecipeShareCard(recipe: recipe, phase: recipe.phase.isEmpty ? "Saved" : recipe.phase)
+                        let renderer = ImageRenderer(content: card)
+                        renderer.scale = 3.0
+                        if let image = renderer.uiImage {
+                            shareImage = image
+                            showShareSheet = true
+                        }
+                    } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 13, weight: .regular))
@@ -868,6 +878,11 @@ struct SavedRecipeSheet: View {
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .stroke(Color.lRule, lineWidth: 1))
+                    }
+                    .sheet(isPresented: $showShareSheet) {
+                        if let img = shareImage {
+                            ShareSheet(items: [img]).ignoresSafeArea()
+                        }
                     }
 
                     Spacer().frame(height: 10)
