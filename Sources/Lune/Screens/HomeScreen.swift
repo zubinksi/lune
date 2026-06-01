@@ -23,38 +23,35 @@ struct HomeScreen: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    topBar
-                    greetingHeader
-                    Spacer().frame(height: 32)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                topBar
+                greetingHeader
+                Spacer().frame(height: 32)
 
-                    if isComposed {
-                        composedFromSection
-                        Spacer().frame(height: 16)
-                        if !appState.dailySummary.isEmpty {
-                            onaReadCard
-                            Spacer().frame(height: 24)
-                        }
-                    } else {
-                        timeline
-                        Spacer().frame(height: 8)
-                        if aiEnabled { composeCTA }
+                if isComposed {
+                    composedFromSection
+                    Spacer().frame(height: 16)
+                    if !appState.dailySummary.isEmpty {
+                        onaReadCard
                         Spacer().frame(height: 24)
                     }
-
-                    recipesSection
-                    Spacer().frame(height: 110)
+                } else {
+                    timeline
+                    Spacer().frame(height: 8)
+                    if aiEnabled { composeCTA }
+                    Spacer().frame(height: 24)
                 }
-            }
-            .scrollDismissesKeyboard(.interactively)
 
-            VStack(spacing: 0) {
-                Spacer()
-                tabBar
+                recipesSection
+                Spacer().frame(height: 32)
             }
-            .ignoresSafeArea(.keyboard, edges: .bottom)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            tabBar
+                .background(Color.lCream.ignoresSafeArea(edges: .bottom))
+                .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .background(Color.lCream.ignoresSafeArea())
         .onAppear {
@@ -166,13 +163,13 @@ struct HomeScreen: View {
                                 withAnimation(.easeInOut(duration: 0.18)) { appState.dailyLog.mood = m }
                             } label: {
                                 Text(m)
-                                    .font(LFont.body(13))
+                                    .font(LFont.body(12))
                                     .foregroundColor(.lInk)
-                                    .padding(.horizontal, 14)
-                                    .frame(height: 38)
+                                    .padding(.horizontal, 12)
+                                    .frame(height: 34)
                                     .background(Color.lPaper)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous)
                                         .stroke(Color.lRule, lineWidth: 1))
                             }
                             .buttonStyle(.plain)
@@ -185,11 +182,13 @@ struct HomeScreen: View {
 
             Spacer(minLength: 8)
 
-            Image(systemName: "face.smiling")
-                .font(.system(size: 22, weight: .light))
-                .foregroundColor(.lPlum.opacity(0.35))
-                .padding(.top, 4)
-                .padding(.trailing, 24)
+            if appState.dailyLog.mood != nil {
+                Image(systemName: "face.smiling")
+                    .font(.system(size: 22, weight: .light))
+                    .foregroundColor(.lPlum.opacity(0.35))
+                    .padding(.top, 4)
+                    .padding(.trailing, 24)
+            }
         }
         .animation(.easeInOut(duration: 0.18), value: appState.dailyLog.mood)
     }
@@ -251,32 +250,15 @@ struct HomeScreen: View {
                     }
                 }
 
-                let cookingStyles = appState.profile.cookingStyles
-                let diet = appState.profile.diet
-                if cookingStyles.isEmpty && diet.isEmpty {
+                let headline = appState.profile.cookingStyles.first ?? appState.profile.diet.first
+                if let h = headline {
+                    Text(h)
+                        .font(LFont.display(22))
+                        .foregroundColor(.lInk)
+                } else {
                     Text("No preferences yet")
                         .font(LFont.display(22, italic: true))
                         .foregroundColor(.lInk2)
-                } else if !cookingStyles.isEmpty {
-                    Text(cookingStyles[0])
-                        .font(LFont.display(22))
-                        .foregroundColor(.lInk)
-                    let sub = Array(cookingStyles.dropFirst()) + diet.prefix(2)
-                    if !sub.isEmpty {
-                        Text(sub.joined(separator: " · "))
-                            .font(LFont.body(13))
-                            .foregroundColor(.lInk3)
-                    }
-                } else {
-                    Text(diet[0])
-                        .font(LFont.display(22))
-                        .foregroundColor(.lInk)
-                    let rest = Array(diet.dropFirst())
-                    if !rest.isEmpty {
-                        Text(rest.joined(separator: " · "))
-                            .font(LFont.body(13))
-                            .foregroundColor(.lInk3)
-                    }
                 }
             }
             .padding(.leading, 16)
