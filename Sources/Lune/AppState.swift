@@ -152,10 +152,19 @@ class AppState: ObservableObject {
 
     func currentSeason() -> String {
         switch Calendar.current.component(.month, from: Date()) {
-        case 3...5:  return "spring"
-        case 6...8:  return "summer"
-        case 9...11: return "autumn"
-        default:     return "winter"
+        case 3:  return "early spring"
+        case 4:  return "mid spring"
+        case 5:  return "late spring"
+        case 6:  return "early summer"
+        case 7:  return "mid summer"
+        case 8:  return "late summer"
+        case 9:  return "early autumn"
+        case 10: return "mid autumn"
+        case 11: return "late autumn"
+        case 12: return "early winter"
+        case 1:  return "mid winter"
+        case 2:  return "late winter"
+        default: return "spring"
         }
     }
 

@@ -78,9 +78,6 @@ struct HomeScreen: View {
                 .font(LFont.mono(10))
                 .tracking(1.2)
                 .foregroundColor(.lInk3)
-            Text("·")
-                .font(LFont.mono(10))
-                .foregroundColor(.lInk3.opacity(0.4))
             Text("MENU")
                 .font(LFont.mono(10))
                 .tracking(1.2)
@@ -179,15 +176,6 @@ struct HomeScreen: View {
             .padding(.leading, 16)
             .padding(.bottom, 24)
 
-            Spacer(minLength: 8)
-
-            if appState.dailyLog.mood != nil {
-                Image(systemName: "face.smiling")
-                    .font(.system(size: 22, weight: .light))
-                    .foregroundColor(.lPlum.opacity(0.35))
-                    .padding(.top, 4)
-                    .padding(.trailing, 24)
-            }
         }
         .animation(.easeInOut(duration: 0.18), value: appState.dailyLog.mood)
     }
@@ -199,9 +187,17 @@ struct HomeScreen: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Eyebrow("Phase")
-                Text("\(phase.name) · day \(appState.cycleDay) of \(appState.cycleLength)")
-                    .font(LFont.display(22))
-                    .foregroundColor(.lInk)
+                HStack(spacing: 10) {
+                    Text("\(phase.name) · Day \(appState.cycleDay) of \(appState.cycleLength)")
+                        .font(LFont.display(22))
+                        .foregroundColor(.lInk)
+                    MoonIcon(
+                        phase: phase.phase,
+                        size: 22,
+                        litColor: .lPlumDeep,
+                        darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07)
+                    )
+                }
                 if let tagline = phaseTaglines[phase.name] {
                     Text(tagline)
                         .font(LFont.body(13))
@@ -210,17 +206,6 @@ struct HomeScreen: View {
             }
             .padding(.leading, 16)
             .padding(.bottom, 24)
-
-            Spacer(minLength: 8)
-
-            MoonIcon(
-                phase: phase.phase,
-                size: 28,
-                litColor: .lPlumDeep,
-                darkColor: Color(red: 42/255, green: 37/255, blue: 32/255).opacity(0.07)
-            )
-            .padding(.top, 4)
-            .padding(.trailing, 24)
         }
     }
 
@@ -257,13 +242,7 @@ struct HomeScreen: View {
             }
             .padding(.leading, 16)
             .padding(.bottom, 8)
-            .padding(.trailing, 8)
-
-            Image(systemName: "heart")
-                .font(.system(size: 20, weight: .light))
-                .foregroundColor(Color(hex: "c9a85c").opacity(0.5))
-                .padding(.top, 4)
-                .padding(.trailing, 24)
+            .padding(.trailing, 24)
         }
     }
 
@@ -321,8 +300,8 @@ struct HomeScreen: View {
                 }
 
                 Text(appState.dailyLog.mood == nil
-                    ? "Pick a mood — add a craving first, if you like."
-                    : "Add a craving if you like, then compose.")
+                    ? "Pick a mood — add a note first, if you like."
+                    : "Add a note if you like, then compose.")
                     .font(LFont.body(12))
                     .foregroundColor(.lInk3)
                     .italic()
@@ -360,10 +339,8 @@ struct HomeScreen: View {
                     label: "\(phase.name) · \(appState.cycleDay)/\(appState.cycleLength)",
                     editable: false) {}
                 composedChip(dot: .lSage, label: appState.currentSeason().capitalized, editable: false) {}
-                if let firstDiet = appState.profile.diet.first {
-                    composedChip(dot: .lTerracottaDeep, label: firstDiet, editable: true) {
-                        showSettings = true
-                    }
+                composedChip(dot: .lTerracottaDeep, label: "Diet & Palate", editable: true) {
+                    showSettings = true
                 }
                 if !homecraving.isEmpty {
                     composedChip(dot: Color(hex: "c9a85c"), label: "\u{201C}\(homecraving)\u{201D}", editable: true) {

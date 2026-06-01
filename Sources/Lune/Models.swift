@@ -113,10 +113,10 @@ let phaseFoods: [String: [String]] = [
 ]
 
 let phaseTaglines: [String: String] = [
-    "Menstrual":  "rest & replenish",
-    "Follicular": "build & explore",
-    "Ovulatory":  "peak & radiate",
-    "Luteal":     "magnesium & warmth",
+    "Menstrual":  "Rest & replenish",
+    "Follicular": "Build & explore",
+    "Ovulatory":  "Peak & radiate",
+    "Luteal":     "Magnesium & warmth",
 ]
 
 let seasonTaglines: [String: String] = [
