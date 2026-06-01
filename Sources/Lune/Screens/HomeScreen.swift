@@ -123,7 +123,6 @@ struct HomeScreen: View {
         VStack(alignment: .leading, spacing: 0) {
             moodRow
             phaseRow
-            kitchenRow
             cravingRow
         }
     }
@@ -222,55 +221,6 @@ struct HomeScreen: View {
             )
             .padding(.top, 4)
             .padding(.trailing, 24)
-        }
-    }
-
-    // MARK: KITCHEN row
-    var kitchenRow: some View {
-        HStack(alignment: .top, spacing: 0) {
-            threadColumn(dot: Color.lTerracottaDeep, isLast: false)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
-                    Eyebrow("Kitchen")
-                    Button { showSettings = true } label: {
-                        HStack(spacing: 3) {
-                            Image(systemName: "pencil")
-                                .font(.system(size: 9, weight: .medium))
-                            Text("edit")
-                                .font(LFont.mono(9))
-                                .tracking(0.5)
-                        }
-                        .foregroundColor(.lInk3)
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 3)
-                        .background(Color.lCream2)
-                        .clipShape(Capsule())
-                        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
-                    }
-                }
-
-                let headline = appState.profile.cookingStyles.first ?? appState.profile.diet.first
-                if let h = headline {
-                    Text(h)
-                        .font(LFont.display(22))
-                        .foregroundColor(.lInk)
-                } else {
-                    Text("No preferences yet")
-                        .font(LFont.display(22, italic: true))
-                        .foregroundColor(.lInk2)
-                }
-            }
-            .padding(.leading, 16)
-            .padding(.bottom, 24)
-
-            Spacer(minLength: 8)
-
-            Image(systemName: "fork.knife")
-                .font(.system(size: 20, weight: .light))
-                .foregroundColor(.lTerracottaDeep.opacity(0.5))
-                .padding(.top, 4)
-                .padding(.trailing, 24)
         }
     }
 
