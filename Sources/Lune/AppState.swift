@@ -215,8 +215,8 @@ class AppState: ObservableObject {
         do {
             let text = try await callAnthropic(prompt: prompt)
             let cleaned = text
-                .replacingOccurrences(of: "^```(?:json)?\\s*", with: "", options: .regularExpression)
-                .replacingOccurrences(of: "```\\s*$", with: "", options: .regularExpression)
+                .replacingOccurrences(of: "^```(?:json)?[\\s\\r\\n]*", with: "", options: .regularExpression)
+                .replacingOccurrences(of: "[\\s\\r\\n]*```\\s*$", with: "", options: .regularExpression)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
             let decoded = try JSONDecoder().decode(RecipeResponse.self, from: Data(cleaned.utf8))
