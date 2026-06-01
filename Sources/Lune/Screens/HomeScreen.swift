@@ -230,14 +230,14 @@ struct HomeScreen: View {
             threadColumn(dot: Color(hex: "c9a85c"), isLast: true)
 
             VStack(alignment: .leading, spacing: 8) {
-                Eyebrow("Hint")
+                Eyebrow("Craving")
                 HStack(spacing: 6) {
                     if homecraving.isEmpty {
                         Image(systemName: "plus")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.lInk3)
                     }
-                    TextField("An ingredient you have, or something you're craving…", text: $homecraving)
+                    TextField("Anything you're craving?", text: $homecraving)
                         .font(LFont.display(20, italic: true))
                         .foregroundColor(.lInk)
                         .focused($cravingFocused)
