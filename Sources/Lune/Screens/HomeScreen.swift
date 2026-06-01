@@ -313,10 +313,11 @@ struct HomeScreen: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(Color.lPaper)
+                .background(Color.lCream)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(cravingFocused ? Color.lPlum.opacity(0.3) : Color.lRule, lineWidth: 1))
+                    .stroke(style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    .foregroundColor(cravingFocused ? Color.lPlum.opacity(0.4) : Color(hex: "c9a85c").opacity(0.35)))
             }
             .padding(.leading, 16)
             .padding(.bottom, 8)
@@ -455,9 +456,9 @@ struct HomeScreen: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
-        .background(Color.lPaper)
+        .background(Color.lCream)
         .clipShape(Capsule())
-        .overlay(Capsule().stroke(Color.lRule, lineWidth: 1))
+        .overlay(Capsule().stroke(Color.lInk.opacity(0.08), lineWidth: 1))
     }
 
     // MARK: - Ona's Read for Today
@@ -466,27 +467,29 @@ struct HomeScreen: View {
             HStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .fill(Color.white.opacity(0.12))
-                        .frame(width: 20, height: 20)
-                    Image(systemName: "plus")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundColor(.white.opacity(0.65))
+                        .fill(Color.lInk)
+                        .frame(width: 22, height: 22)
+                    Image(systemName: "sparkle")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.white)
                 }
                 Text("ONA'S READ FOR TODAY")
                     .font(LFont.mono(9.5))
                     .tracking(1.2)
-                    .foregroundColor(.white.opacity(0.55))
+                    .foregroundColor(.lInk3)
             }
             Text(appState.dailySummary)
                 .font(LFont.display(20, italic: true))
-                .foregroundColor(Color(hex: "f5f0e8"))
+                .foregroundColor(.lInk)
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(red: 42/255, green: 37/255, blue: 32/255))
+        .background(Color.lPaper)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .stroke(Color.lRule, lineWidth: 1))
         .padding(.horizontal, 24)
     }
 
