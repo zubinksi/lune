@@ -45,12 +45,16 @@ struct HomeScreen: View {
                     }
 
                     recipesSection
-                    Spacer().frame(height: 80)
+                    Spacer().frame(height: 110)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
 
-            tabBar
+            VStack(spacing: 0) {
+                Spacer()
+                tabBar
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .background(Color.lCream.ignoresSafeArea())
         .onAppear {
@@ -72,14 +76,23 @@ struct HomeScreen: View {
 
     // MARK: - Top bar
     var topBar: some View {
-        Text(appState.currentSeason().uppercased())
-            .font(LFont.mono(10))
-            .tracking(1.2)
-            .foregroundColor(.lInk3)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 24)
-            .padding(.top, 14)
-            .padding(.bottom, 4)
+        HStack(spacing: 6) {
+            Text(appState.currentSeason().uppercased())
+                .font(LFont.mono(10))
+                .tracking(1.2)
+                .foregroundColor(.lInk3)
+            Text("·")
+                .font(LFont.mono(10))
+                .foregroundColor(.lInk3.opacity(0.4))
+            Text("MENU")
+                .font(LFont.mono(10))
+                .tracking(1.2)
+                .foregroundColor(.lInk3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 24)
+        .padding(.top, 14)
+        .padding(.bottom, 4)
     }
 
     // MARK: - Greeting
@@ -147,24 +160,22 @@ struct HomeScreen: View {
                         .font(LFont.display(22, italic: true))
                         .foregroundColor(.lInk2)
                     Spacer().frame(height: 6)
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(["Steady", "Tender", "Tired", "Bright", "Bloated"], id: \.self) { m in
-                                Button {
-                                    withAnimation(.easeInOut(duration: 0.18)) { appState.dailyLog.mood = m }
-                                } label: {
-                                    Text(m)
-                                        .font(LFont.body(13))
-                                        .foregroundColor(.lInk)
-                                        .padding(.horizontal, 16)
-                                        .frame(height: 38)
-                                        .background(Color.lPaper)
-                                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                            .stroke(Color.lRule, lineWidth: 1))
-                                }
-                                .buttonStyle(.plain)
+                    HStack(spacing: 8) {
+                        ForEach(["Steady", "Tender", "Tired", "Bloated"], id: \.self) { m in
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.18)) { appState.dailyLog.mood = m }
+                            } label: {
+                                Text(m)
+                                    .font(LFont.body(13))
+                                    .foregroundColor(.lInk)
+                                    .padding(.horizontal, 14)
+                                    .frame(height: 38)
+                                    .background(Color.lPaper)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .stroke(Color.lRule, lineWidth: 1))
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -240,16 +251,27 @@ struct HomeScreen: View {
                     }
                 }
 
+                let cookingStyles = appState.profile.cookingStyles
                 let diet = appState.profile.diet
-                if diet.isEmpty {
-                    Text("No restrictions")
+                if cookingStyles.isEmpty && diet.isEmpty {
+                    Text("No preferences yet")
                         .font(LFont.display(22, italic: true))
                         .foregroundColor(.lInk2)
+                } else if !cookingStyles.isEmpty {
+                    Text(cookingStyles[0])
+                        .font(LFont.display(22))
+                        .foregroundColor(.lInk)
+                    let sub = Array(cookingStyles.dropFirst()) + diet.prefix(2)
+                    if !sub.isEmpty {
+                        Text(sub.joined(separator: " · "))
+                            .font(LFont.body(13))
+                            .foregroundColor(.lInk3)
+                    }
                 } else {
                     Text(diet[0])
                         .font(LFont.display(22))
                         .foregroundColor(.lInk)
-                    let rest = Array(diet.dropFirst()) + appState.profile.cookingStyles
+                    let rest = Array(diet.dropFirst())
                     if !rest.isEmpty {
                         Text(rest.joined(separator: " · "))
                             .font(LFont.body(13))

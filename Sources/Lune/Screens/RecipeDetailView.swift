@@ -24,23 +24,6 @@ struct RecipeDetailView: View {
         }
     }
 
-    private var attributeChips: [String] {
-        var chips = [currentPhase, appState.currentSeason().capitalized]
-        if let mood = appState.dailyLog.mood { chips.append(mood) }
-        chips.append(contentsOf: appState.profile.diet.prefix(2))
-        return chips
-    }
-
-    private var tweakPresets: [String] {
-        switch currentPhase {
-        case "Menstrual":  return ["make it warmer", "more iron", "no dairy"]
-        case "Follicular": return ["more protein", "make it raw", "lighter"]
-        case "Ovulatory":  return ["more cooling", "add flax seeds", "less heat"]
-        case "Luteal":     return ["add dark chocolate", "more magnesium", "swap to lentils"]
-        default:           return ["make it vegan", "swap the protein", "lighter version"]
-        }
-    }
-
     private var canTweak: Bool {
         !tweakText.trimmingCharacters(in: .whitespaces).isEmpty && !tweakLoading
     }
@@ -103,33 +86,6 @@ struct RecipeDetailView: View {
                         .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Spacer().frame(height: 20)
-
-                    // "Why this, for you today" card
-                    VStack(alignment: .leading, spacing: 10) {
-                        Eyebrow("Why this, for you today")
-
-                        FlowLayout(spacing: 6) {
-                            ForEach(attributeChips, id: \.self) { chip in
-                                Text(chip)
-                                    .font(LFont.body(12))
-                                    .foregroundColor(.lPlum)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 5)
-                                    .background(Color.lPlum.opacity(0.08))
-                                    .clipShape(Capsule())
-                                    .overlay(Capsule().stroke(Color.lPlum.opacity(0.2), lineWidth: 1))
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.lPlum.opacity(0.04))
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.lPlum.opacity(0.12), lineWidth: 1))
-
                     Spacer().frame(height: 28)
 
                     // Ingredients
@@ -179,24 +135,10 @@ struct RecipeDetailView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Eyebrow("Tweak with Ona")
 
-                        FlowLayout(spacing: 6) {
-                            ForEach(tweakPresets, id: \.self) { preset in
-                                Button {
-                                    tweakText = tweakText == preset ? "" : preset
-                                } label: {
-                                    Text(preset)
-                                        .font(LFont.body(12))
-                                        .foregroundColor(tweakText == preset ? .lPlum : .lInk2)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 7)
-                                        .background(tweakText == preset ? Color.lPlum.opacity(0.08) : Color.lCream2)
-                                        .clipShape(Capsule())
-                                        .overlay(Capsule().stroke(
-                                            tweakText == preset ? Color.lPlum.opacity(0.3) : Color.lRule, lineWidth: 1))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
+                        Text("Missing something or not in the mood? Tell Ona to rework it.")
+                            .font(LFont.body(13))
+                            .foregroundColor(.lInk2)
+                            .lineSpacing(2)
 
                         HStack(spacing: 8) {
                             TextField("e.g. swap walnuts, make it dairy-free…", text: $tweakText)
@@ -206,7 +148,7 @@ struct RecipeDetailView: View {
                                 .onSubmit { Task { await performTweak() } }
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 12)
-                                .background(Color.lPaper)
+                                .background(Color.lCream)
                                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                                     .stroke(Color.lRule, lineWidth: 1))
@@ -235,52 +177,12 @@ struct RecipeDetailView: View {
                             }
                         }
                     }
-
-                    Spacer().frame(height: 24)
-
-                    // Save + Share
-                    HStack(spacing: 10) {
-                        Button {
-                            if isSaved {
-                                appState.savedRecipes.removeAll { $0.name == display.name }
-                            } else {
-                                var r = display
-                                r.phase = currentPhase
-                                appState.savedRecipes.append(r)
-                            }
-                        } label: {
-                            HStack(spacing: 6) {
-                                Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
-                                    .font(.system(size: 13, weight: .regular))
-                                Text(isSaved ? "Saved" : "Save")
-                                    .font(LFont.body(13))
-                            }
-                            .foregroundColor(isSaved ? .lPlum : .lInk2)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
-                            .background(isSaved ? Color.lPlum.opacity(0.08) : Color.lPaper)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(isSaved ? Color.lPlum.opacity(0.3) : Color.lRule, lineWidth: 1))
-                        }
-                        .animation(.easeInOut(duration: 0.15), value: isSaved)
-
-                        ShareLink(item: recipeShareText(display)) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "square.and.arrow.up")
-                                    .font(.system(size: 13, weight: .regular))
-                                Text("Share")
-                                    .font(LFont.body(13))
-                            }
-                            .foregroundColor(.lInk2)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
-                            .background(Color.lPaper)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(Color.lRule, lineWidth: 1))
-                        }
-                    }
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.lPaper)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.lRule, lineWidth: 1))
 
                     Spacer().frame(height: 60)
                 }
@@ -299,8 +201,35 @@ struct RecipeDetailView: View {
                     .foregroundColor(.lPlum)
                 }
                 Spacer()
-                if display.ingredients.isEmpty && display.steps.isEmpty {
-                    EmptyView()
+                HStack(spacing: 10) {
+                    Button {
+                        if isSaved {
+                            appState.savedRecipes.removeAll { $0.name == display.name }
+                        } else {
+                            var r = display
+                            r.phase = currentPhase
+                            appState.savedRecipes.append(r)
+                        }
+                    } label: {
+                        Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(isSaved ? .lPlum : .lInk2)
+                            .frame(width: 36, height: 36)
+                            .background(Color.lPaper)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.lRule, lineWidth: 1))
+                    }
+                    .animation(.easeInOut(duration: 0.15), value: isSaved)
+
+                    ShareLink(item: recipeShareText(display)) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(.lInk2)
+                            .frame(width: 36, height: 36)
+                            .background(Color.lPaper)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.lRule, lineWidth: 1))
+                    }
                 }
             }
             .padding(.horizontal, 20)
