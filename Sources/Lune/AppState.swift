@@ -201,7 +201,7 @@ class AppState: ObservableObject {
         - Cooking style & flavour profile: \(cookingStyles)\(cookingStyleNotes.isEmpty ? "" : ". Additional: \(cookingStyleNotes)")
         - How she feels today: \(mood)\(cravingClause)\(avoidClause)
 
-        Each recipe should be doable in 30 minutes or less and specifically suited to the \(phase.name) phase. Vary the meal timing: one morning, one midday, one evening.
+        Each recipe should be doable in 30 minutes or less and specifically suited to the \(phase.name) phase. Vary the meal timing: one morning, one midday, one evening. All ingredient quantities should be calibrated for one serving — main components (grains, protein, veg) in substantive amounts (e.g. 80 g, ½ cup, 1 fillet), supporting ingredients (oils, spices, dressings) in appropriately smaller amounts (1 tbsp, ½ tsp). Avoid listing a bulk quantity of one ingredient alongside trace amounts of everything else.
 
         Also write a "summary": one warm, italic-ready sentence (max 12 words) describing the overall nutritional approach for today.
 
@@ -214,7 +214,7 @@ class AppState: ObservableObject {
               "name": "short evocative name (max 6 words)",
               "time": "Morning" | "Midday" | "Evening",
               "why": "ONE warm sentence (max 18 words) tying it to her \(phase.name) phase",
-              "ingredients": ["7-9 short ingredient lines with quantities"],
+              "ingredients": ["7-9 ingredient lines for 1 serving, each as 'quantity unit ingredient' (e.g. '80 g rolled oats', '1 tbsp tahini', '½ tsp ground ginger') — main components in substantive amounts, condiments/spices in proportionally smaller ones"],
               "steps": ["3-5 brief prep steps, one sentence each"]
             }
           ]

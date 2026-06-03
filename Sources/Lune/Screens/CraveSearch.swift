@@ -284,7 +284,7 @@ struct CraveSearchSection: View {
               "name": "short evocative name (max 6 words)",
               "time": "e.g. 15 min",
               "why": "ONE warm sentence (max 18 words) tying it to her \(phase.name) phase and feelings",
-              "ingredients": ["7-9 short ingredient lines with quantities"],
+              "ingredients": ["7-9 ingredient lines for 1 serving, each as 'quantity unit ingredient' (e.g. '80 g rolled oats', '1 tbsp tahini', '½ tsp ground ginger') — main components in substantive amounts, condiments/spices in proportionally smaller ones"],
               "steps": ["3-5 brief prep steps, one sentence each"]
             }
           ]
@@ -574,7 +574,7 @@ func callAnthropicTweak(
     You are a warm, knowledgeable nutritionist.
 
     Adjust this recipe based on the following request: \(tweak)
-    Keep the same dish concept and meal timing. Only change what was asked.
+    Keep the same dish concept and meal timing. Only change what was asked. All quantities should be calibrated for one serving — main components in substantive amounts (e.g. 80 g, ½ cup, 1 fillet), condiments and spices in proportionally smaller amounts (1 tbsp, ½ tsp).
 
     Original:
     Name: \(name)
@@ -590,7 +590,7 @@ func callAnthropicTweak(
       "name": "short evocative name (max 6 words)",
       "time": "\(time)",
       "why": "ONE warm sentence (max 18 words) tying it to the \(phase) phase",
-      "ingredients": ["7-9 short ingredient lines with quantities"],
+      "ingredients": ["7-9 ingredient lines for 1 serving, each as 'quantity unit ingredient' (e.g. '80 g rolled oats', '1 tbsp tahini', '½ tsp ground ginger') — main components in substantive amounts, condiments/spices in proportionally smaller ones"],
       "steps": ["3-5 brief prep steps, one sentence each"]
     }
     """
